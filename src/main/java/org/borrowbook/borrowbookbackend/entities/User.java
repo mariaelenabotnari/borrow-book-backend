@@ -1,10 +1,11 @@
-package org.borrowbook.borrowbookbackend.user;
+package org.borrowbook.borrowbookbackend.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.borrowbook.borrowbookbackend.Role;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

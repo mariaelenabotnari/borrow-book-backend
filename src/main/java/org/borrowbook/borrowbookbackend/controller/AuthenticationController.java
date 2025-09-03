@@ -1,10 +1,14 @@
-package org.borrowbook.borrowbookbackend.auth;
+package org.borrowbook.borrowbookbackend.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.borrowbook.borrowbookbackend.dto.AuthenticationRequest;
+import org.borrowbook.borrowbookbackend.dto.AuthenticationResponse;
+import org.borrowbook.borrowbookbackend.dto.RegisterRequest;
+import org.borrowbook.borrowbookbackend.dto.VerifyCodeRequest;
 import org.borrowbook.borrowbookbackend.service.EmailService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.borrowbook.borrowbookbackend.auth.AuthenticationService;
+import org.borrowbook.borrowbookbackend.service.AuthenticationService;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -23,18 +27,15 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> login(
-            @RequestBody AuthenticationRequest request
-    ) {
+    public ResponseEntity<String> login(@RequestBody AuthenticationRequest request) {
         service.loginAndSendCode(request);
-        return ResponseEntity.ok(service.authenticate(request));
+        return ResponseEntity.ok("Verification code sent to email.");
     }
 
     @PostMapping("/verify-code")
     public ResponseEntity<AuthenticationResponse> verifyCode(
-            @RequestParam String username,
-            @RequestParam String code
+            @RequestBody VerifyCodeRequest request
     ) {
-        return ResponseEntity.ok(service.verifyCode(username, code));
+        return ResponseEntity.ok(service.verifyCode(request.getUsername(), request.getCode()));
     }
 }

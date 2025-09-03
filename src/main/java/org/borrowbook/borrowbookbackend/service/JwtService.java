@@ -1,4 +1,4 @@
-package org.borrowbook.borrowbookbackend.config;
+package org.borrowbook.borrowbookbackend.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
