@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: borrow_book_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: borrow_book
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: maria2004
+    ports:
+      - "5432:5432"
+    volumes:
+      - book_data:/var/lib/postgresql/data
+
+volumes:
+  book_data:

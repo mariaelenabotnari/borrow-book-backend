@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:inline="text">
+<head>
+    <meta charset="UTF-8">
+    <title>2FA Verification</title>
+</head>
+<body>
+<h2>Email Verification</h2>
+
+<p>Hello [[${email}]],</p>
+
+<p>
+    Please use the following verification code to complete your sign-in or finish setting up your account:
+</p>
+
+<p><strong>[[${code}]]</strong></p>
+
+<p>
+    If you didn’t request this, you can safely ignore this email.
+</p>
+
+<hr>
+
+<p>
+    This message was sent to [[${email}]] by BorrowBook.
+</p>
+</body>
+</html>
