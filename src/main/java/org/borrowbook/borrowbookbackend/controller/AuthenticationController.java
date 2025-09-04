@@ -1,5 +1,6 @@
 package org.borrowbook.borrowbookbackend.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.dto.AuthenticationRequest;
 import org.borrowbook.borrowbookbackend.dto.AuthenticationResponse;
@@ -19,23 +20,19 @@ public class AuthenticationController {
     private final EmailService emailService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(
-            @RequestBody RegisterRequest request
-    ) {
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
         service.registerAndSendCode(request);
         return ResponseEntity.ok("Verification code sent to email.");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody AuthenticationRequest request) {
+    public ResponseEntity<String> login(@Valid @RequestBody AuthenticationRequest request) {
         service.loginAndSendCode(request);
         return ResponseEntity.ok("Verification code sent to email.");
     }
 
     @PostMapping("/verify-code")
-    public AuthenticationResponse verifyCode(
-            @RequestBody VerifyCodeRequest request
-    ) {
+    public AuthenticationResponse verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
         return service.verifyCode(request.getUsername(), request.getCode());
     }
 }
