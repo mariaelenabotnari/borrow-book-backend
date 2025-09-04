@@ -2,7 +2,9 @@ package org.borrowbook.borrowbookbackend.exception.handler;
 
 
 import lombok.extern.log4j.Log4j2;
+import org.borrowbook.borrowbookbackend.exception.EmailInUseException;
 import org.borrowbook.borrowbookbackend.exception.EmailServiceException;
+import org.borrowbook.borrowbookbackend.exception.UsernameInUseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -51,6 +53,30 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(globalException, status);
     }
 
+    @ExceptionHandler(exception={EmailInUseException.class, UsernameInUseException.class})
+    public ResponseEntity<Object> handleInUseException(RuntimeException ex) {
+        log.error(ex.getMessage(), ex.getCause());
+        HttpStatus status = HttpStatus.BAD_REQUEST;
 
+        ExceptionResult globalException = new ExceptionResult(
+                ex.getMessage(),
+                status,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(globalException, status);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleGeneralException(Exception ex) {
+        log.error(ex.getMessage(), ex.getCause());
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        ExceptionResult globalException = new ExceptionResult(
+                "Internal Server Error",
+                status,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(globalException, status);
+    }
 }
 

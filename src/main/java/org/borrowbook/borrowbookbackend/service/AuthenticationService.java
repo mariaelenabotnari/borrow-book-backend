@@ -6,6 +6,8 @@ import org.borrowbook.borrowbookbackend.dto.AuthenticationResponse;
 import org.borrowbook.borrowbookbackend.dto.RegisterRequest;
 import org.borrowbook.borrowbookbackend.Role;
 import org.borrowbook.borrowbookbackend.entities.User;
+import org.borrowbook.borrowbookbackend.exception.EmailInUseException;
+import org.borrowbook.borrowbookbackend.exception.UsernameInUseException;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,6 +30,13 @@ public class AuthenticationService {
     private final Map<String, String> verificationCodes = new HashMap<>();
 
     public void registerAndSendCode(RegisterRequest request) {
+        if (repository.findByUsername(request.getUsername()).isPresent()) {
+            throw new UsernameInUseException("Username is already in use");
+        }
+        if (repository.findByEmail(request.getEmail()).isPresent()) {
+            throw new EmailInUseException("Email is already in use");
+        }
+
         var user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
