@@ -20,9 +20,9 @@ public class AuthenticationController {
     private final EmailService emailService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
+    public String register(@Valid @RequestBody RegisterRequest request) {
         service.registerAndSendCode(request);
-        return ResponseEntity.ok("Verification code sent to email.");
+        return "Verification code sent to email.";
     }
 
     @PostMapping("/login")
