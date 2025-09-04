@@ -9,11 +9,13 @@ import org.borrowbook.borrowbookbackend.entities.User;
 import org.borrowbook.borrowbookbackend.exception.EmailInUseException;
 import org.borrowbook.borrowbookbackend.exception.UsernameInUseException;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +29,8 @@ public class AuthenticationService {
     private final EmailService emailService;
     private final AuthenticationManager authenticationManager;
 
-    private final Map<String, String> verificationCodes = new HashMap<>();
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final Duration verificationCodeTTL = Duration.ofHours(1);
 
     public void registerAndSendCode(RegisterRequest request) {
         if (repository.findByUsername(request.getUsername()).isPresent()) {
@@ -47,7 +50,12 @@ public class AuthenticationService {
         repository.save(user);
 
         String code = String.valueOf((int)(Math.random() * 900000) + 100000);
-        verificationCodes.put(user.getUsername(), code);
+
+        redisTemplate.opsForValue().set(
+                "verification:" + user.getUsername(),
+                code,
+                verificationCodeTTL
+        );
 
         emailService.sendVerificationCode(user.getEmail(), code);
 
@@ -63,13 +71,18 @@ public class AuthenticationService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String code = String.valueOf((int)(Math.random() * 900000) + 100000);
-        verificationCodes.put(user.getUsername(), code);
+
+        redisTemplate.opsForValue().set(
+                "verification:" + user.getUsername(),
+                code,
+                verificationCodeTTL
+        );
 
         emailService.sendVerificationCode(user.getEmail(), code);
     }
 
     public AuthenticationResponse verifyCode(String username, String code) {
-        String storedCode = verificationCodes.get(username);
+        String storedCode = (String) redisTemplate.opsForValue().get("verification:" + username);
 
         if (storedCode != null && storedCode.equals(code)) {
             var user = repository.findByUsername(username)
@@ -77,7 +90,7 @@ public class AuthenticationService {
 
             var jwtToken = jwtService.generateToken(user);
 
-            verificationCodes.remove(username);
+            redisTemplate.delete("verification:" + username);
 
             return AuthenticationResponse.builder()
                     .token(jwtToken)
