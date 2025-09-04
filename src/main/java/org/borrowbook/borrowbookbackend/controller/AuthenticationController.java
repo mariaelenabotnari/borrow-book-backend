@@ -33,9 +33,9 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify-code")
-    public ResponseEntity<AuthenticationResponse> verifyCode(
+    public AuthenticationResponse verifyCode(
             @RequestBody VerifyCodeRequest request
     ) {
-        return ResponseEntity.ok(service.verifyCode(request.getUsername(), request.getCode()));
+        return service.verifyCode(request.getUsername(), request.getCode());
     }
 }
