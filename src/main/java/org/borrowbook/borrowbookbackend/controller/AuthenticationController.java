@@ -33,6 +33,6 @@ public class AuthenticationController {
 
     @PostMapping("/verify-code")
     public AuthenticationResponse verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
-        return service.verifyCode(request.getUsername(), request.getCode());
+        return service.verifyCode(request.getEmail(), request.getCode());
     }
 }

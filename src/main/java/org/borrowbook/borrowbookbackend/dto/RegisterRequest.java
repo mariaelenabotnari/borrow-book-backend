@@ -21,7 +21,6 @@ public class RegisterRequest {
     @Schema(example = "string@example.com")
     private String email;
 
-
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be of at least 8 characters")
     @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*[A-Z])(?=.*\\d).+$",

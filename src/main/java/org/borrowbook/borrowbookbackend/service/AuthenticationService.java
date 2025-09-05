@@ -30,30 +30,22 @@ public class AuthenticationService {
     private final RateLimiterService rateLimiterService;
 
     public void registerAndSendCode(RegisterRequest request) {
-        repository.findByUsername(request.getUsername())
-                .ifPresent(user -> {
-                    if (user.isActivated()) {
-                        throw new UsernameInUseException("Username is already in use");
-                    }
-                });
-
+        if (repository.findByUsername(request.getUsername()).isPresent())
+            throw new UsernameInUseException("Username is already in use");
         repository.findByEmail(request.getEmail())
-                .ifPresent(user -> {
-                    if (user.isActivated()) {
-                        throw new EmailInUseException("Email is already in use");
-                    }
-                });
+            .ifPresent(user -> {
+                if (user.isActivated())
+                    throw new EmailInUseException("Email is already in use");
+            });
 
         var existingUser = repository.findByEmail(request.getEmail())
                 .orElse(null);
+
         User user;
         if (existingUser != null && !existingUser.isActivated()) {
             existingUser.setUsername(request.getUsername());
             existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
             user = existingUser;
-        }
-        else if (existingUser != null && existingUser.isActivated()) {
-            throw new EmailInUseException("Email is already in use");
         }
         else {
             user = User.builder()
@@ -68,41 +60,41 @@ public class AuthenticationService {
         repository.save(user);
 
         long retryAfter = rateLimiterService.checkRateLimit(
-                "register", request.getUsername(), 5, 15 * 60);
+                "register", request.getEmail(), 5, 15 * 60);
         if (retryAfter > 0)
             throw new RuntimeException("Too many register attempts. Try again in " + retryAfter + " seconds.");
 
         String code = generateCode();
-        codeVerificationService.storeCode(user.getUsername(), code);
+        codeVerificationService.storeCode(user.getEmail(), code);
 
         emailService.sendVerificationCode(user.getEmail(), code);
     }
 
     public void loginAndSendCode(AuthenticationRequest request) {
         long retryAfter = rateLimiterService.checkRateLimit(
-                "login", request.getUsername(), 5, 15 * 60);
+                "login", request.getEmail(), 5, 15 * 60);
         if (retryAfter > 0)
             throw new RuntimeException("Too many login attempts. Try again in " + retryAfter + " seconds.");
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
+                        request.getEmail(),
                         request.getPassword()));
 
-        var user = repository.findByUsername(request.getUsername())
+        var user = repository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String code = generateCode();
-        codeVerificationService.storeCode(user.getUsername(), code);
+        codeVerificationService.storeCode(user.getEmail(), code);
 
         emailService.sendVerificationCode(user.getEmail(), code);
     }
 
-    public AuthenticationResponse verifyCode(String username, String code) {
-        String storedCode = codeVerificationService.getCode(username);
+    public AuthenticationResponse verifyCode(String email, String code) {
+        String storedCode = codeVerificationService.getCode(email);
 
         if (storedCode != null && storedCode.equals(code)) {
-            var user = repository.findByUsername(username)
+            var user = repository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found"));
             user.setActivated(true);
             repository.save(user);
@@ -114,8 +106,8 @@ public class AuthenticationService {
 
             var jwtToken = jwtService.generateToken(user);
 
-            codeVerificationService.deleteCode(user.getUsername());
-            rateLimiterService.deleteRateLimit(user.getUsername(), "login", "register");
+            codeVerificationService.deleteCode(user.getEmail());
+            rateLimiterService.deleteRateLimit(user.getEmail(), "login", "register");
 
             return AuthenticationResponse.builder()
                     .token(jwtToken)
@@ -147,11 +139,11 @@ public class AuthenticationService {
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
+                        request.getEmail(),
                         request.getPassword())
         );
 
-        var user = repository.findByUsername(request.getUsername())
+        var user = repository.findByEmail(request.getEmail())
                 .orElseThrow();
         if (!user.isActivated()) {
             throw new RuntimeException("Please verify your email.");
