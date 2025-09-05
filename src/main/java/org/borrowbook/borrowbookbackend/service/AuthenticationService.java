@@ -1,23 +1,20 @@
 package org.borrowbook.borrowbookbackend.service;
 
 import lombok.RequiredArgsConstructor;
+import org.borrowbook.borrowbookbackend.Role;
 import org.borrowbook.borrowbookbackend.dto.AuthenticationRequest;
 import org.borrowbook.borrowbookbackend.dto.AuthenticationResponse;
 import org.borrowbook.borrowbookbackend.dto.RegisterRequest;
-import org.borrowbook.borrowbookbackend.Role;
 import org.borrowbook.borrowbookbackend.entities.User;
 import org.borrowbook.borrowbookbackend.exception.EmailInUseException;
 import org.borrowbook.borrowbookbackend.exception.UsernameInUseException;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
+import java.security.SecureRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +26,7 @@ public class AuthenticationService {
     private final EmailService emailService;
     private final AuthenticationManager authenticationManager;
 
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final Duration verificationCodeTTL = Duration.ofHours(1);
+    private final CodeVerificationService codeVerificationService;
 
     public void registerAndSendCode(RegisterRequest request) {
         repository.findByUsername(request.getUsername())
@@ -49,17 +45,17 @@ public class AuthenticationService {
 
         var existingUser = repository.findByEmail(request.getEmail())
                 .orElse(null);
-        User userToSave;
+        User user;
         if (existingUser != null && !existingUser.isActivated()) {
             existingUser.setUsername(request.getUsername());
             existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
-            userToSave = existingUser;
+            user = existingUser;
         }
         else if (existingUser != null && existingUser.isActivated()) {
             throw new EmailInUseException("Email is already in use");
         }
         else {
-            userToSave = User.builder()
+            user = User.builder()
                     .username(request.getUsername())
                     .email(request.getEmail())
                     .password(passwordEncoder.encode(request.getPassword()))
@@ -68,26 +64,12 @@ public class AuthenticationService {
                     .build();
         }
 
-        repository.save(userToSave);
+        repository.save(user);
 
-        String code = String.valueOf((int)(Math.random() * 900000) + 100000);
+        String code = generateCode();
+        codeVerificationService.storeCode(user.getUsername(), code);
 
-        try {
-            redisTemplate.opsForValue().set(
-                    "verification:" + userToSave.getUsername(),
-                    code,
-                    verificationCodeTTL
-            );
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to save code in Redis", e);
-        }
-
-        try {
-            emailService.sendVerificationCode(userToSave.getEmail(), code);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to send verification email", e);
-        }
-
+        emailService.sendVerificationCode(user.getEmail(), code);
     }
 
     public void loginAndSendCode(AuthenticationRequest request) {
@@ -99,19 +81,14 @@ public class AuthenticationService {
         var user = repository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String code = String.valueOf((int)(Math.random() * 900000) + 100000);
-
-        redisTemplate.opsForValue().set(
-                "verification:" + user.getUsername(),
-                code,
-                verificationCodeTTL
-        );
+        String code = generateCode();
+        codeVerificationService.storeCode(user.getUsername(), code);
 
         emailService.sendVerificationCode(user.getEmail(), code);
     }
 
     public AuthenticationResponse verifyCode(String username, String code) {
-        String storedCode = (String) redisTemplate.opsForValue().get("verification:" + username);
+        String storedCode = codeVerificationService.getCode(username);
 
         if (storedCode != null && storedCode.equals(code)) {
             var user = repository.findByUsername(username)
@@ -126,13 +103,19 @@ public class AuthenticationService {
 
             var jwtToken = jwtService.generateToken(user);
 
-            redisTemplate.delete("verification:" + username);
+            codeVerificationService.deleteCode(user.getUsername());
 
             return AuthenticationResponse.builder()
                     .token(jwtToken)
                     .build();
         }
         throw new RuntimeException("Invalid verification code");
+    }
+
+    private String generateCode() {
+        SecureRandom random = new SecureRandom();
+        int code = 100000 + random.nextInt(900000);
+        return String.valueOf(code);
     }
 
     public AuthenticationResponse register(RegisterRequest request) {
