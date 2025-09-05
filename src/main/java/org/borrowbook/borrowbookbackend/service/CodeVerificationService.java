@@ -10,7 +10,7 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class CodeVerificationService {
     private final RedisTemplate<String, Object> redisTemplate;
-    private final Duration defaultTTL = Duration.ofHours(1);
+    private final Duration defaultTTL = Duration.ofMinutes(15);
 
     private String buildKey(String username) {
         return "verification:" + username;

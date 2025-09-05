@@ -27,6 +27,7 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     private final CodeVerificationService codeVerificationService;
+    private final RateLimiterService rateLimiterService;
 
     public void registerAndSendCode(RegisterRequest request) {
         repository.findByUsername(request.getUsername())
@@ -66,6 +67,11 @@ public class AuthenticationService {
 
         repository.save(user);
 
+        long retryAfter = rateLimiterService.checkRateLimit(
+                "register", request.getUsername(), 5, 15 * 60);
+        if (retryAfter > 0)
+            throw new RuntimeException("Too many register attempts. Try again in " + retryAfter + " seconds.");
+
         String code = generateCode();
         codeVerificationService.storeCode(user.getUsername(), code);
 
@@ -73,6 +79,11 @@ public class AuthenticationService {
     }
 
     public void loginAndSendCode(AuthenticationRequest request) {
+        long retryAfter = rateLimiterService.checkRateLimit(
+                "login", request.getUsername(), 5, 15 * 60);
+        if (retryAfter > 0)
+            throw new RuntimeException("Too many login attempts. Try again in " + retryAfter + " seconds.");
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
