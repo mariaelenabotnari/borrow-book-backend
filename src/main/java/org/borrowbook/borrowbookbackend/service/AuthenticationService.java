@@ -6,8 +6,7 @@ import org.borrowbook.borrowbookbackend.dto.AuthenticationRequest;
 import org.borrowbook.borrowbookbackend.dto.AuthenticationResponse;
 import org.borrowbook.borrowbookbackend.dto.RegisterRequest;
 import org.borrowbook.borrowbookbackend.entities.User;
-import org.borrowbook.borrowbookbackend.exception.EmailInUseException;
-import org.borrowbook.borrowbookbackend.exception.UsernameInUseException;
+import org.borrowbook.borrowbookbackend.exception.*;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -62,7 +61,7 @@ public class AuthenticationService {
         long retryAfter = rateLimiterService.checkRateLimit(
                 "register", request.getEmail(), 5, 15 * 60);
         if (retryAfter > 0)
-            throw new RuntimeException("Too many register attempts. Try again in " + retryAfter + " seconds.");
+            throw new RateLimitException("Too many register attempts. Try again in " + retryAfter + " seconds.");
 
         String code = generateCode();
         codeVerificationService.storeCode(user.getEmail(), code);
@@ -74,7 +73,7 @@ public class AuthenticationService {
         long retryAfter = rateLimiterService.checkRateLimit(
                 "login", request.getEmail(), 5, 15 * 60);
         if (retryAfter > 0)
-            throw new RuntimeException("Too many login attempts. Try again in " + retryAfter + " seconds.");
+            throw new RateLimitException("Too many login attempts. Try again in " + retryAfter + " seconds.");
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -82,7 +81,7 @@ public class AuthenticationService {
                         request.getPassword()));
 
         var user = repository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         String code = generateCode();
         codeVerificationService.storeCode(user.getEmail(), code);
@@ -95,7 +94,7 @@ public class AuthenticationService {
 
         if (storedCode != null && storedCode.equals(code)) {
             var user = repository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new NotFoundException("User not found"));
             user.setActivated(true);
             repository.save(user);
 
@@ -113,7 +112,7 @@ public class AuthenticationService {
                     .token(jwtToken)
                     .build();
         }
-        throw new RuntimeException("Invalid verification code");
+        throw new InvalidCodeException("Invalid verification code");
     }
 
     private String generateCode() {
