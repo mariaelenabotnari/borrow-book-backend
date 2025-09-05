@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.management.openmbean.ArrayType;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -13,8 +14,12 @@ import java.util.concurrent.TimeUnit;
 public class RateLimiterService {
     private final RedisTemplate<String, String> redisTemplate;
 
+    private String buildKey(String keyPrefix, String identifier) {
+        return "rate_limit:" + keyPrefix + ":" + identifier;
+    }
+
     public long checkRateLimit(String keyPrefix, String identifier, int limit, long windowSeconds) {
-        String key = "rate_limit:" + keyPrefix + ":" + identifier;
+        String key = buildKey(keyPrefix, identifier);
 
         long now = Instant.now().toEpochMilli();
         long windowStart = now - windowSeconds * 1000;
@@ -45,5 +50,11 @@ public class RateLimiterService {
         redisTemplate.expire(key, windowSeconds, TimeUnit.SECONDS);
 
         return 0;
+    }
+
+    public void deleteRateLimit(String identifier, String... keyPrefixes) {
+        for (String keyPrefix : keyPrefixes) {
+            redisTemplate.delete(buildKey(keyPrefix, identifier));
+        }
     }
 }

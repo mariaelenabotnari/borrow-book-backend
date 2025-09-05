@@ -115,6 +115,7 @@ public class AuthenticationService {
             var jwtToken = jwtService.generateToken(user);
 
             codeVerificationService.deleteCode(user.getUsername());
+            rateLimiterService.deleteRateLimit(user.getUsername(), "login", "register");
 
             return AuthenticationResponse.builder()
                     .token(jwtToken)
