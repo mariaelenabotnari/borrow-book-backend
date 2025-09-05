@@ -33,31 +33,60 @@ public class AuthenticationService {
     private final Duration verificationCodeTTL = Duration.ofHours(1);
 
     public void registerAndSendCode(RegisterRequest request) {
-        if (repository.findByUsername(request.getUsername()).isPresent()) {
-            throw new UsernameInUseException("Username is already in use");
+        repository.findByUsername(request.getUsername())
+                .ifPresent(user -> {
+                    if (user.isActivated()) {
+                        throw new UsernameInUseException("Username is already in use");
+                    }
+                });
+
+        repository.findByEmail(request.getEmail())
+                .ifPresent(user -> {
+                    if (user.isActivated()) {
+                        throw new EmailInUseException("Email is already in use");
+                    }
+                });
+
+        var existingUser = repository.findByEmail(request.getEmail())
+                .orElse(null);
+        User userToSave;
+        if (existingUser != null && !existingUser.isActivated()) {
+            existingUser.setUsername(request.getUsername());
+            existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
+            userToSave = existingUser;
         }
-        if (repository.findByEmail(request.getEmail()).isPresent()) {
+        else if (existingUser != null && existingUser.isActivated()) {
             throw new EmailInUseException("Email is already in use");
         }
+        else {
+            userToSave = User.builder()
+                    .username(request.getUsername())
+                    .email(request.getEmail())
+                    .password(passwordEncoder.encode(request.getPassword()))
+                    .role(Role.USER)
+                    .activated(false)
+                    .build();
+        }
 
-        var user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
-                .build();
-
-        repository.save(user);
+        repository.save(userToSave);
 
         String code = String.valueOf((int)(Math.random() * 900000) + 100000);
 
-        redisTemplate.opsForValue().set(
-                "verification:" + user.getUsername(),
-                code,
-                verificationCodeTTL
-        );
+        try {
+            redisTemplate.opsForValue().set(
+                    "verification:" + userToSave.getUsername(),
+                    code,
+                    verificationCodeTTL
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to save code in Redis", e);
+        }
 
-        emailService.sendVerificationCode(user.getEmail(), code);
+        try {
+            emailService.sendVerificationCode(userToSave.getEmail(), code);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send verification email", e);
+        }
 
     }
 
@@ -87,6 +116,13 @@ public class AuthenticationService {
         if (storedCode != null && storedCode.equals(code)) {
             var user = repository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
+            user.setActivated(true);
+            repository.save(user);
+
+            repository.findByEmail(user.getEmail())
+                    .stream()
+                    .filter(u -> !u.getUsername().equals(user.getUsername()) && !u.isActivated())
+                    .forEach(repository::delete);
 
             var jwtToken = jwtService.generateToken(user);
 
@@ -122,6 +158,10 @@ public class AuthenticationService {
 
         var user = repository.findByUsername(request.getUsername())
                 .orElseThrow();
+        if (!user.isActivated()) {
+            throw new RuntimeException("Please verify your email.");
+        }
+
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)

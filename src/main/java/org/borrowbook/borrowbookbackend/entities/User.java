@@ -31,6 +31,7 @@ public class User implements UserDetails {  // required by Spring Security
     @Column(unique = true)
     private String email;
     private String password;
+    private boolean activated;
     @Enumerated(EnumType.STRING)
     private Role role;
 
