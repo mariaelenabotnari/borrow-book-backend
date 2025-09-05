@@ -20,14 +20,14 @@ public class ApplicationConfig {
     private final UserRepository repository;
 
     @Bean
-    // loads a user by username
     public UserDetailsService userDetailsService() {
-        return username -> repository.findByUsername(username)
-                .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+        return email -> repository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 
+
     @Bean
-    // verifies username + password
+    // verifies email + password
     public AuthenticationProvider authenticationProvider() {
         // Uses DB (via UserDetailsService) to load user
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();

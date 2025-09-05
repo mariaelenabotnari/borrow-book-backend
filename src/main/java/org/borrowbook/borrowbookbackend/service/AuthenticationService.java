@@ -1,23 +1,19 @@
 package org.borrowbook.borrowbookbackend.service;
 
 import lombok.RequiredArgsConstructor;
+import org.borrowbook.borrowbookbackend.Role;
 import org.borrowbook.borrowbookbackend.dto.AuthenticationRequest;
 import org.borrowbook.borrowbookbackend.dto.AuthenticationResponse;
 import org.borrowbook.borrowbookbackend.dto.RegisterRequest;
-import org.borrowbook.borrowbookbackend.Role;
 import org.borrowbook.borrowbookbackend.entities.User;
-import org.borrowbook.borrowbookbackend.exception.EmailInUseException;
-import org.borrowbook.borrowbookbackend.exception.UsernameInUseException;
+import org.borrowbook.borrowbookbackend.exception.*;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
+import java.security.SecureRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -29,37 +25,29 @@ public class AuthenticationService {
     private final EmailService emailService;
     private final AuthenticationManager authenticationManager;
 
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final Duration verificationCodeTTL = Duration.ofHours(1);
+    private final CodeVerificationService codeVerificationService;
+    private final RateLimiterService rateLimiterService;
 
     public void registerAndSendCode(RegisterRequest request) {
-        repository.findByUsername(request.getUsername())
-                .ifPresent(user -> {
-                    if (user.isActivated()) {
-                        throw new UsernameInUseException("Username is already in use");
-                    }
-                });
-
+        if (repository.findByUsername(request.getUsername()).isPresent())
+            throw new UsernameInUseException("Username is already in use");
         repository.findByEmail(request.getEmail())
-                .ifPresent(user -> {
-                    if (user.isActivated()) {
-                        throw new EmailInUseException("Email is already in use");
-                    }
-                });
+            .ifPresent(user -> {
+                if (user.isActivated())
+                    throw new EmailInUseException("Email is already in use");
+            });
 
         var existingUser = repository.findByEmail(request.getEmail())
                 .orElse(null);
-        User userToSave;
+
+        User user;
         if (existingUser != null && !existingUser.isActivated()) {
             existingUser.setUsername(request.getUsername());
             existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
-            userToSave = existingUser;
-        }
-        else if (existingUser != null && existingUser.isActivated()) {
-            throw new EmailInUseException("Email is already in use");
+            user = existingUser;
         }
         else {
-            userToSave = User.builder()
+            user = User.builder()
                     .username(request.getUsername())
                     .email(request.getEmail())
                     .password(passwordEncoder.encode(request.getPassword()))
@@ -68,54 +56,45 @@ public class AuthenticationService {
                     .build();
         }
 
-        repository.save(userToSave);
+        repository.save(user);
 
-        String code = String.valueOf((int)(Math.random() * 900000) + 100000);
+        long retryAfter = rateLimiterService.checkRateLimit(
+                "register", request.getEmail(), 5, 15 * 60);
+        if (retryAfter > 0)
+            throw new RateLimitException("Too many register attempts. Try again in " + retryAfter + " seconds.");
 
-        try {
-            redisTemplate.opsForValue().set(
-                    "verification:" + userToSave.getUsername(),
-                    code,
-                    verificationCodeTTL
-            );
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to save code in Redis", e);
-        }
-
-        try {
-            emailService.sendVerificationCode(userToSave.getEmail(), code);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to send verification email", e);
-        }
-
-    }
-
-    public void loginAndSendCode(AuthenticationRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()));
-
-        var user = repository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        String code = String.valueOf((int)(Math.random() * 900000) + 100000);
-
-        redisTemplate.opsForValue().set(
-                "verification:" + user.getUsername(),
-                code,
-                verificationCodeTTL
-        );
+        String code = generateCode();
+        codeVerificationService.storeCode(user.getEmail(), code);
 
         emailService.sendVerificationCode(user.getEmail(), code);
     }
 
-    public AuthenticationResponse verifyCode(String username, String code) {
-        String storedCode = (String) redisTemplate.opsForValue().get("verification:" + username);
+    public void loginAndSendCode(AuthenticationRequest request) {
+        long retryAfter = rateLimiterService.checkRateLimit(
+                "login", request.getEmail(), 5, 15 * 60);
+        if (retryAfter > 0)
+            throw new RateLimitException("Too many login attempts. Try again in " + retryAfter + " seconds.");
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()));
+
+        var user = repository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        String code = generateCode();
+        codeVerificationService.storeCode(user.getEmail(), code);
+
+        emailService.sendVerificationCode(user.getEmail(), code);
+    }
+
+    public AuthenticationResponse verifyCode(String email, String code) {
+        String storedCode = codeVerificationService.getCode(email);
 
         if (storedCode != null && storedCode.equals(code)) {
-            var user = repository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+            var user = repository.findByEmail(email)
+                    .orElseThrow(() -> new NotFoundException("User not found"));
             user.setActivated(true);
             repository.save(user);
 
@@ -126,13 +105,20 @@ public class AuthenticationService {
 
             var jwtToken = jwtService.generateToken(user);
 
-            redisTemplate.delete("verification:" + username);
+            codeVerificationService.deleteCode(user.getEmail());
+            rateLimiterService.deleteRateLimit(user.getEmail(), "login", "register");
 
             return AuthenticationResponse.builder()
                     .token(jwtToken)
                     .build();
         }
-        throw new RuntimeException("Invalid verification code");
+        throw new InvalidCodeException("Invalid verification code");
+    }
+
+    private String generateCode() {
+        SecureRandom random = new SecureRandom();
+        int code = 100000 + random.nextInt(900000);
+        return String.valueOf(code);
     }
 
     public AuthenticationResponse register(RegisterRequest request) {
@@ -152,11 +138,11 @@ public class AuthenticationService {
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
+                        request.getEmail(),
                         request.getPassword())
         );
 
-        var user = repository.findByUsername(request.getUsername())
+        var user = repository.findByEmail(request.getEmail())
                 .orElseThrow();
         if (!user.isActivated()) {
             throw new RuntimeException("Please verify your email.");
