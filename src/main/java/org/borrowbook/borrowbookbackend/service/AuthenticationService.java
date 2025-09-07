@@ -28,7 +28,7 @@ public class AuthenticationService {
     private final RateLimiterService rateLimiterService;
 
     @Transactional
-    public void registerAndSendCode(RegisterRequest request) {
+    public SessionResponse registerAndSendCode(RegisterRequest request) {
         this.checkRateLimit("register", request.getEmail());
 
         if (repository.findByUsername(request.getUsername()).isPresent()) {
@@ -43,11 +43,11 @@ public class AuthenticationService {
         User user = new User(request.getUsername(), request.getEmail(), passwordEncoder.encode(request.getPassword()));
 
         repository.save(user);
-        this.sendCode(user, true);
+        return this.sendCode(user, true);
     }
 
     @Transactional
-    public void loginAndSendCode(AuthenticationRequest request) {
+    public SessionResponse loginAndSendCode(AuthenticationRequest request) {
         this.checkRateLimit("login", request.getUsername());
 
         long retryAfter = rateLimiterService.checkRateLimit("login", request.getUsername(), 5, 15 * 60);
@@ -61,7 +61,7 @@ public class AuthenticationService {
 
         User user = (User) authentication.getPrincipal();
 
-        this.sendCode(user, false);
+        return this.sendCode(user, false);
     }
 
     @Transactional
@@ -89,7 +89,7 @@ public class AuthenticationService {
         return new AuthenticationResponse(jwtToken);
     }
 
-    private void sendCode(User user, boolean isNew) {
+    private SessionResponse sendCode(User user, boolean isNew) {
         String code = generator.generateOTP();
         VerificationSession verificationSession = new VerificationSession(user.getEmail(), user.getUsername(), code, 0);
         String sessionId = generator.generateSessionId();
@@ -98,6 +98,7 @@ public class AuthenticationService {
             codeVerificationService.addSessionToEmail(user.getEmail(), sessionId);
         }
         emailService.sendVerificationCode(user.getEmail(), code);
+        return new SessionResponse(sessionId);
     }
 
     private void checkRateLimit(String prefix, String identifier){
