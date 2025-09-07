@@ -43,7 +43,8 @@ public class GlobalExceptionHandler {
             UsernameInUseException.class,
             InvalidCodeException.class,
             EmailServiceException.class,
-            RateLimitException.class
+            RateLimitException.class,
+            MaxOtpAttemptsExceededException.class
     })
     public ResponseEntity<Object> handleBadRequestException(RuntimeException ex) {
         log.error(ex.getMessage(), ex.getCause());

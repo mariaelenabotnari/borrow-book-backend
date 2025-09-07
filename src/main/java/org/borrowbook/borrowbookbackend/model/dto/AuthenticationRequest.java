@@ -1,4 +1,4 @@
-package org.borrowbook.borrowbookbackend.dto;
+package org.borrowbook.borrowbookbackend.model.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
@@ -15,15 +15,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthenticationRequest {
-    @Email(message = "Invalid email format")
-    @NotBlank(message = "Email is required")
-    @Schema(example = "string@example.com")
-    private String email;
+    @NotBlank(message = "Username is required")
+    private String username;
+
 
     @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be of at least 8 characters")
-    @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*[A-Z])(?=.*\\d).+$",
-            message = "Password must contain at least one letter, one uppercase letter, and one number`")
-    @Schema(example = "string")
     private String password;
 }

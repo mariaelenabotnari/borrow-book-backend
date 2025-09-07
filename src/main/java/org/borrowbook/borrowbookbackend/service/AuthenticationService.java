@@ -1,19 +1,17 @@
 package org.borrowbook.borrowbookbackend.service;
 
 import lombok.RequiredArgsConstructor;
-import org.borrowbook.borrowbookbackend.Role;
-import org.borrowbook.borrowbookbackend.dto.AuthenticationRequest;
-import org.borrowbook.borrowbookbackend.dto.AuthenticationResponse;
-import org.borrowbook.borrowbookbackend.dto.RegisterRequest;
-import org.borrowbook.borrowbookbackend.entities.User;
+import org.borrowbook.borrowbookbackend.model.dto.*;
+import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.exception.*;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
+import org.borrowbook.borrowbookbackend.util.Generator;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.security.SecureRandom;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,132 +23,88 @@ public class AuthenticationService {
     private final EmailService emailService;
     private final AuthenticationManager authenticationManager;
 
+    private final Generator generator;
     private final CodeVerificationService codeVerificationService;
     private final RateLimiterService rateLimiterService;
 
-    public void registerAndSendCode(RegisterRequest request) {
-        if (repository.findByUsername(request.getUsername()).isPresent())
+    @Transactional
+    public SessionResponse registerAndSendCode(RegisterRequest request) {
+        this.checkRateLimit("register", request.getEmail());
+
+        if (repository.findByUsername(request.getUsername()).isPresent()) {
             throw new UsernameInUseException("Username is already in use");
-        repository.findByEmail(request.getEmail())
-            .ifPresent(user -> {
-                if (user.isActivated())
-                    throw new EmailInUseException("Email is already in use");
-            });
-
-        var existingUser = repository.findByEmail(request.getEmail())
-                .orElse(null);
-
-        User user;
-        if (existingUser != null && !existingUser.isActivated()) {
-            existingUser.setUsername(request.getUsername());
-            existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
-            user = existingUser;
         }
-        else {
-            user = User.builder()
-                    .username(request.getUsername())
-                    .email(request.getEmail())
-                    .password(passwordEncoder.encode(request.getPassword()))
-                    .role(Role.USER)
-                    .activated(false)
-                    .build();
+        var existingUser = repository.findByEmail(request.getEmail()).orElse(null);
+
+        if (existingUser != null && existingUser.isActivated()) {
+            throw new EmailInUseException("Email is already in use. Please sign in!");
         }
+
+        User user = new User(request.getUsername(), request.getEmail(), passwordEncoder.encode(request.getPassword()));
 
         repository.save(user);
-
-        long retryAfter = rateLimiterService.checkRateLimit(
-                "register", request.getEmail(), 5, 15 * 60);
-        if (retryAfter > 0)
-            throw new RateLimitException("Too many register attempts. Try again in " + retryAfter + " seconds.");
-
-        String code = generateCode();
-        codeVerificationService.storeCode(user.getEmail(), code);
-
-        emailService.sendVerificationCode(user.getEmail(), code);
+        return this.sendCode(user, true);
     }
 
-    public void loginAndSendCode(AuthenticationRequest request) {
-        long retryAfter = rateLimiterService.checkRateLimit(
-                "login", request.getEmail(), 5, 15 * 60);
-        if (retryAfter > 0)
+    @Transactional
+    public SessionResponse loginAndSendCode(AuthenticationRequest request) {
+        this.checkRateLimit("login", request.getUsername());
+
+        long retryAfter = rateLimiterService.checkRateLimit("login", request.getUsername(), 5, 15 * 60);
+        if (retryAfter > 0) {
             throw new RateLimitException("Too many login attempts. Try again in " + retryAfter + " seconds.");
-
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()));
-
-        var user = repository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
-        String code = generateCode();
-        codeVerificationService.storeCode(user.getEmail(), code);
-
-        emailService.sendVerificationCode(user.getEmail(), code);
-    }
-
-    public AuthenticationResponse verifyCode(String email, String code) {
-        String storedCode = codeVerificationService.getCode(email);
-
-        if (storedCode != null && storedCode.equals(code)) {
-            var user = repository.findByEmail(email)
-                    .orElseThrow(() -> new NotFoundException("User not found"));
-            user.setActivated(true);
-            repository.save(user);
-
-            repository.findByEmail(user.getEmail())
-                    .stream()
-                    .filter(u -> !u.getUsername().equals(user.getUsername()) && !u.isActivated())
-                    .forEach(repository::delete);
-
-            var jwtToken = jwtService.generateToken(user);
-
-            codeVerificationService.deleteCode(user.getEmail());
-            rateLimiterService.deleteRateLimit(user.getEmail(), "login", "register");
-
-            return AuthenticationResponse.builder()
-                    .token(jwtToken)
-                    .build();
         }
-        throw new InvalidCodeException("Invalid verification code");
-    }
 
-    public String generateCode() {
-        SecureRandom random = new SecureRandom();
-        int code = 100000 + random.nextInt(900000);
-        return String.valueOf(code);
-    }
-
-    public AuthenticationResponse register(RegisterRequest request) {
-        var user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
-                .build();
-        repository.save(user);
-        var jwtToken = jwtService.generateToken(user);
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .build();
-    }
-
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword())
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
-        var user = repository.findByEmail(request.getEmail())
-                .orElseThrow();
-        if (!user.isActivated()) {
-            throw new RuntimeException("Please verify your email.");
+        User user = (User) authentication.getPrincipal();
+
+        return this.sendCode(user, false);
+    }
+
+    @Transactional
+    public AuthenticationResponse verifyCode(VerifyCodeRequest request) {
+        VerificationSession session = codeVerificationService.verifyCode(request.getSessionId(), request.getCode());
+
+        if (session == null) {
+            throw new InvalidCodeException("Invalid verification code");
         }
 
-        var jwtToken = jwtService.generateToken(user);
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .build();
+        User user = repository.findByUsername(session.getUsername())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        user.setActivated(true);
+        repository.save(user);
+
+        repository.findByEmail(session.getEmail()).stream()
+                .filter(u -> !u.getUsername().equals(session.getUsername()) && !u.isActivated())
+                .forEach(repository::delete);
+
+        String jwtToken = jwtService.generateToken(user);
+
+        rateLimiterService.deleteRateLimit(session.getEmail(), "register");
+        rateLimiterService.deleteRateLimit(session.getUsername(), "login");
+      
+        return new AuthenticationResponse(jwtToken);
+
+
+    private SessionResponse sendCode(User user, boolean isNew) {
+        String code = generator.generateOTP();
+        VerificationSession verificationSession = new VerificationSession(user.getEmail(), user.getUsername(), code, 0);
+        String sessionId = generator.generateSessionId();
+        codeVerificationService.storeSession(sessionId, verificationSession);
+        if (isNew){
+            codeVerificationService.addSessionToEmail(user.getEmail(), sessionId);
+        }
+        emailService.sendVerificationCode(user.getEmail(), code);
+        return new SessionResponse(sessionId);
+    }
+
+    private void checkRateLimit(String prefix, String identifier){
+        long retryAfter = rateLimiterService.checkRateLimit(prefix, identifier, 5, 15 * 60);
+        if (retryAfter > 0) {
+            throw new RateLimitException("Too many login attempts. Try again in " + retryAfter + " seconds.");
+        }
     }
 }

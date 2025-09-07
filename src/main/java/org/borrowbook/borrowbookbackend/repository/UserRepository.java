@@ -1,6 +1,6 @@
 package org.borrowbook.borrowbookbackend.repository;
 
-import org.borrowbook.borrowbookbackend.entities.User;
+import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
