@@ -2,15 +2,11 @@ package org.borrowbook.borrowbookbackend.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.borrowbook.borrowbookbackend.model.dto.AuthenticationRequest;
-import org.borrowbook.borrowbookbackend.model.dto.AuthenticationResponse;
-import org.borrowbook.borrowbookbackend.model.dto.RegisterRequest;
-import org.borrowbook.borrowbookbackend.model.dto.VerifyCodeRequest;
+import org.borrowbook.borrowbookbackend.model.dto.*;
+import org.borrowbook.borrowbookbackend.service.AuthenticationService;
 import org.borrowbook.borrowbookbackend.service.EmailService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.borrowbook.borrowbookbackend.service.AuthenticationService;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -18,17 +14,16 @@ import org.borrowbook.borrowbookbackend.service.AuthenticationService;
 public class AuthenticationController {
 
     private final AuthenticationService service;
-    private final EmailService emailService;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public void register(@Valid @RequestBody RegisterRequest request) {
-        service.registerAndSendCode(request);
+    public SessionResponse register(@Valid @RequestBody RegisterRequest request) {
+        return service.registerAndSendCode(request);
     }
 
     @PostMapping("/login")
-    public void login(@Valid @RequestBody AuthenticationRequest request) {
-        service.loginAndSendCode(request);
+    public SessionResponse login(@Valid @RequestBody AuthenticationRequest request) {
+        return service.loginAndSendCode(request);
     }
 
     @PostMapping("/verify-code")

@@ -1,9 +1,7 @@
 package org.borrowbook.borrowbookbackend.config;
 
 import lombok.RequiredArgsConstructor;
-import org.borrowbook.borrowbookbackend.filters.JwtAuthentificationFilter;
-import org.borrowbook.borrowbookbackend.repository.UserRepository;
-import org.borrowbook.borrowbookbackend.service.UserDetailsServiceImpl;
+import org.borrowbook.borrowbookbackend.filter.JwtAuthentificationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

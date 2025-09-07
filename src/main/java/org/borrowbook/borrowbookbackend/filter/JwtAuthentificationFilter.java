@@ -1,4 +1,4 @@
-package org.borrowbook.borrowbookbackend.filters;
+package org.borrowbook.borrowbookbackend.filter;
 
 import io.micrometer.common.lang.NonNull;
 import jakarta.servlet.FilterChain;
