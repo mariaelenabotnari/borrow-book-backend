@@ -1,4 +1,4 @@
-package org.borrowbook.borrowbookbackend.dto;
+package org.borrowbook.borrowbookbackend.model.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

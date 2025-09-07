@@ -1,4 +1,4 @@
-package org.borrowbook.borrowbookbackend.entities;
+package org.borrowbook.borrowbookbackend.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -12,17 +12,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
-
-@Data  // generates setters, getters
+@Data
 @Builder
-@NoArgsConstructor  // default empty constructor
-@AllArgsConstructor  // constructor with all fields
-// JPA Entity that maps to a table in the DB
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "_user")
-// By implementing UserDetails, Spring Security can authenticate and authorize this user automatically when logging in
-public class User implements UserDetails {  // required by Spring Security
-    // Primary key generated incrementally
+public class User implements UserDetails {
     @Id
     @GeneratedValue
     private Integer id;
@@ -35,9 +31,27 @@ public class User implements UserDetails {  // required by Spring Security
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    public User(String username, String email, String password){
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.role = Role.USER;
+        this.activated = false;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        return this.password;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.username;
     }
 
     @Override
