@@ -2,13 +2,12 @@ package org.borrowbook.borrowbookbackend.service;
 
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.Role;
-import org.borrowbook.borrowbookbackend.dto.AuthenticationRequest;
-import org.borrowbook.borrowbookbackend.dto.OAuthRegisterRequest;
-import org.borrowbook.borrowbookbackend.entities.User;
 import org.borrowbook.borrowbookbackend.exception.EmailInUseException;
 import org.borrowbook.borrowbookbackend.exception.NotFoundException;
 import org.borrowbook.borrowbookbackend.exception.RateLimitException;
 import org.borrowbook.borrowbookbackend.exception.UsernameInUseException;
+import org.borrowbook.borrowbookbackend.model.dto.AuthenticationRequest;
+import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,7 +25,7 @@ public class OAuthService {
     private final AuthenticationService authenticationService;
     private final AuthenticationManager authenticationManager;
 
-    public void registerAndSendCode(OAuthRegisterRequest request) {
+    public void registerAndSendCode(org.borrowbook.borrowbookbackend.model.dto.AuthenticationRequest.OAuthRegisterRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent())
             throw new UsernameInUseException("Username is already in use");
         userRepository.findByEmail(request.getEmail())
@@ -61,29 +60,29 @@ public class OAuthService {
         if (retryAfter > 0)
             throw new RateLimitException("Too many register attempts. Try again in " + retryAfter + " seconds.");
 
-        String code = authenticationService.generateCode();
-        codeVerificationService.storeCode(user.getEmail(), code);
-
-        emailService.sendVerificationCode(user.getEmail(), code);
+//        String code = authenticationService.generateCode();
+//        codeVerificationService.storeCode(user.getEmail(), code);
+//
+//        emailService.sendVerificationCode(user.getEmail(), code);
     }
 
     public void loginAndSendCode(AuthenticationRequest request) {
         long retryAfter = rateLimiterService.checkRateLimit(
-                "login", request.getEmail(), 5, 15 * 60);
+                "login", request.getUsername(), 5, 15 * 60);
         if (retryAfter > 0)
             throw new RateLimitException("Too many login attempts. Try again in " + retryAfter + " seconds.");
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
+                        request.getUsername(),
                         request.getPassword()));
 
-        var user = userRepository.findByEmail(request.getEmail())
+        var user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        String code = authenticationService.generateCode();
-        codeVerificationService.storeCode(user.getEmail(), code);
-
-        emailService.sendVerificationCode(user.getEmail(), code);
+//        String code = authenticationService.generateCode();
+//        codeVerificationService.storeCode(user.getEmail(), code);
+//
+//        emailService.sendVerificationCode(user.getEmail(), code);
     }
 }

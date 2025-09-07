@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.service.AuthenticationService;
-import org.borrowbook.borrowbookbackend.service.EmailService;
+import org.borrowbook.borrowbookbackend.service.OAuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,7 +34,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/oauth-register")
-    public String oauthRegister(@Valid @RequestBody OAuthRegisterRequest request) {
+    public String oauthRegister(@Valid @RequestBody AuthenticationRequest.OAuthRegisterRequest request) {
         oAuthService.registerAndSendCode(request);
         return "Verification code sent to email.";
     }

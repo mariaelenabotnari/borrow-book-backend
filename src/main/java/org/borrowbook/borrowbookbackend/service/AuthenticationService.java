@@ -85,8 +85,9 @@ public class AuthenticationService {
 
         rateLimiterService.deleteRateLimit(session.getEmail(), "register");
         rateLimiterService.deleteRateLimit(session.getUsername(), "login");
-      
+
         return new AuthenticationResponse(jwtToken);
+    }
 
 
     private SessionResponse sendCode(User user, boolean isNew) {
@@ -94,14 +95,14 @@ public class AuthenticationService {
         VerificationSession verificationSession = new VerificationSession(user.getEmail(), user.getUsername(), code, 0);
         String sessionId = generator.generateSessionId();
         codeVerificationService.storeSession(sessionId, verificationSession);
-        if (isNew){
+        if (isNew) {
             codeVerificationService.addSessionToEmail(user.getEmail(), sessionId);
         }
         emailService.sendVerificationCode(user.getEmail(), code);
         return new SessionResponse(sessionId);
     }
 
-    private void checkRateLimit(String prefix, String identifier){
+    private void checkRateLimit(String prefix, String identifier) {
         long retryAfter = rateLimiterService.checkRateLimit(prefix, identifier, 5, 15 * 60);
         if (retryAfter > 0) {
             throw new RateLimitException("Too many login attempts. Try again in " + retryAfter + " seconds.");
