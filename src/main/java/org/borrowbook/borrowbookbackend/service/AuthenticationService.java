@@ -85,9 +85,9 @@ public class AuthenticationService {
 
         rateLimiterService.deleteRateLimit(session.getEmail(), "register");
         rateLimiterService.deleteRateLimit(session.getUsername(), "login");
-
+      
         return new AuthenticationResponse(jwtToken);
-    }
+
 
     private SessionResponse sendCode(User user, boolean isNew) {
         String code = generator.generateOTP();

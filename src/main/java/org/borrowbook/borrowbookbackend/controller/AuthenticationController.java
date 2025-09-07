@@ -9,11 +9,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
 
     private final AuthenticationService service;
+    private final OAuthService oAuthService;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -29,5 +31,11 @@ public class AuthenticationController {
     @PostMapping("/verify-code")
     public AuthenticationResponse verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
         return service.verifyCode(request);
+    }
+
+    @PostMapping("/oauth-register")
+    public String oauthRegister(@Valid @RequestBody OAuthRegisterRequest request) {
+        oAuthService.registerAndSendCode(request);
+        return "Verification code sent to email.";
     }
 }
