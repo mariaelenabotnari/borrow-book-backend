@@ -115,7 +115,7 @@ public class AuthenticationService {
         throw new InvalidCodeException("Invalid verification code");
     }
 
-    private String generateCode() {
+    public String generateCode() {
         SecureRandom random = new SecureRandom();
         int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
