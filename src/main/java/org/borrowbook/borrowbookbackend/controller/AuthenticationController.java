@@ -35,8 +35,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/oauth-register")
-    public void oauthRegister(@Valid @RequestBody AuthenticationRequest.OAuthRegisterRequest request) {
-        oAuthService.registerAndSendCode(request);
+    public SessionResponse oauthRegister(@Valid @RequestBody AuthenticationRequest.OAuthRegisterRequest request) {
+        return oAuthService.activateUser(request.getEmail());
     }
 
     @GetMapping("/get")
