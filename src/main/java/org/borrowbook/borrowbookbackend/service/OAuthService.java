@@ -34,6 +34,18 @@ public class OAuthService {
         String token = jwtService.generateToken(user);
         return new SessionResponse(token);
     }
+
+    public SessionResponse login(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found with that email"));
+
+        if (user.getGoogleId() == null || !user.isActivated()) {
+            throw new NotFoundException("User not registered with Google");
+        }
+
+        String token = jwtService.generateToken(user);
+        return new SessionResponse(token);
+    }
 }
 
 
