@@ -86,10 +86,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGeneralException(Exception ex) {
-        log.error("Exception: {} | Message: {} | Cause: {}",
+        log.error("Exception: {} | Message: {} | Cause: {} | Stacktrace: {}",
                 ex.getClass().getSimpleName(),
                 ex.getMessage(),
-                ex.getCause());
+                ex.getCause(),
+                ex.getStackTrace());
 
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 

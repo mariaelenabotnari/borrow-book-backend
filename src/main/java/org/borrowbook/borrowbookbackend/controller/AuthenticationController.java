@@ -34,8 +34,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/oauth-register")
-    public String oauthRegister(@Valid @RequestBody AuthenticationRequest.OAuthRegisterRequest request) {
+    public void oauthRegister(@Valid @RequestBody AuthenticationRequest.OAuthRegisterRequest request) {
         oAuthService.registerAndSendCode(request);
-        return "Verification code sent to email.";
     }
 }

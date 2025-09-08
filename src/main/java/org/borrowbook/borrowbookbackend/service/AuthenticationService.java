@@ -34,9 +34,9 @@ public class AuthenticationService {
         if (repository.findByUsername(request.getUsername()).isPresent()) {
             throw new UsernameInUseException("Username is already in use");
         }
-        var existingUser = repository.findByEmail(request.getEmail()).orElse(null);
+        var existingUser = repository.findByEmailAndActivatedTrue(request.getEmail()).orElse(null);
 
-        if (existingUser != null && existingUser.isActivated()) {
+        if (existingUser != null) {
             throw new EmailInUseException("Email is already in use. Please sign in!");
         }
 
@@ -49,11 +49,6 @@ public class AuthenticationService {
     @Transactional
     public SessionResponse loginAndSendCode(AuthenticationRequest request) {
         this.checkRateLimit("login", request.getUsername());
-
-        long retryAfter = rateLimiterService.checkRateLimit("login", request.getUsername(), 5, 15 * 60);
-        if (retryAfter > 0) {
-            throw new RateLimitException("Too many login attempts. Try again in " + retryAfter + " seconds.");
-        }
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
@@ -77,7 +72,7 @@ public class AuthenticationService {
         user.setActivated(true);
         repository.save(user);
 
-        repository.findByEmail(session.getEmail()).stream()
+        repository.findAllByEmail(session.getEmail()).stream()
                 .filter(u -> !u.getUsername().equals(session.getUsername()) && !u.isActivated())
                 .forEach(repository::delete);
 
