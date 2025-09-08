@@ -1,11 +1,14 @@
 package org.borrowbook.borrowbookbackend.service;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.exception.*;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
 import org.borrowbook.borrowbookbackend.util.Generator;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,6 +25,7 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final EmailService emailService;
     private final AuthenticationManager authenticationManager;
+    private final CookieService cookieService;
 
     private final Generator generator;
     private final CodeVerificationService codeVerificationService;
@@ -60,7 +64,7 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public AuthenticationResponse verifyCode(VerifyCodeRequest request) {
+    public void verifyCode(VerifyCodeRequest request, HttpServletResponse response) {
         VerificationSession session = codeVerificationService.verifyCode(request.getSessionId(), request.getCode());
 
         if (session == null) {
@@ -72,16 +76,11 @@ public class AuthenticationService {
         user.setActivated(true);
         repository.save(user);
 
-        repository.findAllByEmail(session.getEmail()).stream()
-                .filter(u -> !u.getUsername().equals(session.getUsername()) && !u.isActivated())
-                .forEach(repository::delete);
-
         String jwtToken = jwtService.generateToken(user);
+        response.addHeader("Set-Cookie", cookieService.createJwtCookie(jwtToken).toString());
 
         rateLimiterService.deleteRateLimit(session.getEmail(), "register");
         rateLimiterService.deleteRateLimit(session.getUsername(), "login");
-
-        return new AuthenticationResponse(jwtToken);
     }
 
 

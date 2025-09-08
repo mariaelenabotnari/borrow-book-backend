@@ -1,5 +1,6 @@
 package org.borrowbook.borrowbookbackend.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.model.dto.*;
@@ -29,12 +30,16 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify-code")
-    public AuthenticationResponse verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
-        return service.verifyCode(request);
+    public void verifyCode(@Valid @RequestBody VerifyCodeRequest request, HttpServletResponse response) {
+         service.verifyCode(request, response);
     }
 
     @PostMapping("/oauth-register")
     public void oauthRegister(@Valid @RequestBody AuthenticationRequest.OAuthRegisterRequest request) {
         oAuthService.registerAndSendCode(request);
     }
+
+    @GetMapping("/get")
+    public void get(){}
+
 }
