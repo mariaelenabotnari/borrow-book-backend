@@ -76,6 +76,10 @@ public class AuthenticationService {
         user.setActivated(true);
         repository.save(user);
 
+        repository.findAllByEmail(session.getEmail()).stream()
+                .filter(u -> !u.getUsername().equals(session.getUsername()) && !u.isActivated())
+                .forEach(repository::delete);
+
         String jwtToken = jwtService.generateToken(user);
         response.addHeader("Set-Cookie", cookieService.createJwtCookie(jwtToken).toString());
 
