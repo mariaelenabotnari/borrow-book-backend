@@ -6,7 +6,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.service.AuthenticationService;
-import org.borrowbook.borrowbookbackend.service.OAuthService;
 import org.borrowbook.borrowbookbackend.service.RefreshTokenService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
 
     private final AuthenticationService service;
-    private final OAuthService oAuthService;
+
     private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/register")
@@ -36,11 +35,6 @@ public class AuthenticationController {
     @PostMapping("/verify-code")
     public void verifyCode(@Valid @RequestBody VerifyCodeRequest request, HttpServletResponse response) {
          service.verifyCode(request, response);
-    }
-
-    @PostMapping("/oauth-register")
-    public void oauthRegister(@Valid @RequestBody AuthenticationRequest.OAuthRegisterRequest request) {
-        oAuthService.registerAndSendCode(request);
     }
 
     @GetMapping("/get")

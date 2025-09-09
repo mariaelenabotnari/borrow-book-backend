@@ -4,22 +4,30 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.Role;
+import org.borrowbook.borrowbookbackend.exception.EmailInUseException;
+import org.borrowbook.borrowbookbackend.exception.NotFoundException;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
+import org.borrowbook.borrowbookbackend.service.CookieService;
 import org.borrowbook.borrowbookbackend.service.JwtService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final CookieService cookieService;
+
+    @Value("${application.frontend.url}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -28,17 +36,34 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
 
         DefaultOAuth2User oauth2User = (DefaultOAuth2User) authentication.getPrincipal();
         String email = oauth2User.getAttribute("email");
+        String googleId = oauth2User.getAttribute("sub");
 
-        Optional<User> user = userRepository.findByEmail(email);
-        if (user.isEmpty()) {
+        User user = userRepository.findByEmail(email).orElseGet(() -> {
             User newUser = new User();
             newUser.setEmail(email);
-            newUser.setActivated(false);
+            newUser.setUsername(extractUsername(email));
+            newUser.setGoogleId(googleId);
+            newUser.setActivated(true);
             newUser.setRole(Role.USER);
-            userRepository.save(newUser);
+            return userRepository.save(newUser);
+        });
+
+        if (user.getGoogleId() == null || !user.isActivated()) {
+            throw new NotFoundException("No account registered with Google for this email.");
         }
-        // Redirects the user to a form with the email autocompleted and the fields for
-        // username and password to be completed
-        response.sendRedirect("http://localhost:3000/oauth-register?email=" + email);
+
+        String jwtToken = jwtService.generateToken(user);
+        response.addHeader("Set-Cookie", cookieService.createJwtCookie(jwtToken).toString());
+
+        response.setContentType("application/json");
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.getWriter().write("{\"message\":\"Login successful\"}");
+    }
+
+    public String extractUsername(String email) {
+        if (email == null || !email.contains("@")) {
+            throw new IllegalArgumentException("Invalid email");
+        }
+        return email.substring(0, email.indexOf('@'));
     }
 }

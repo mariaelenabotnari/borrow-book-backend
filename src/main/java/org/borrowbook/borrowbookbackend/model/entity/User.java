@@ -27,6 +27,7 @@ public class User implements UserDetails {
     private String email;
     private String password;
     private boolean activated;
+    private String googleId;
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -36,6 +37,7 @@ public class User implements UserDetails {
         this.password = password;
         this.role = Role.USER;
         this.activated = false;
+        this.googleId = null;
     }
 
     @Override
