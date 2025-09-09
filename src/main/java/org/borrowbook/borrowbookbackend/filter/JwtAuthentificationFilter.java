@@ -2,6 +2,7 @@ package org.borrowbook.borrowbookbackend.filter;
 
 import io.micrometer.common.lang.NonNull;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +31,7 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain) {
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         try {
             final String jwt = cookieService.getJwtFromCookies(request.getCookies());
@@ -60,5 +63,12 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             cookieService.clearJwtCookie(response);
         }
+        filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request){
+        String path = request.getServletPath();
+        return path.startsWith("/api/v1/auth/it ");
     }
 }
