@@ -34,6 +34,7 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         try {
+            System.out.println("YOLO");
             final String jwt = cookieService.getJwtFromCookies(request.getCookies());
             if (jwt == null) {
                 filterChain.doFilter(request, response);
@@ -69,6 +70,6 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request){
         String path = request.getServletPath();
-        return path.startsWith("/api/v1/auth/it ");
+        return path.startsWith("/api/v1/auth/");
     }
 }
