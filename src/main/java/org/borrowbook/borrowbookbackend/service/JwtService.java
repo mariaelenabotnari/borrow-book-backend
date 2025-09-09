@@ -16,10 +16,11 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
-
+    
     private static final String SECRET_KEY = "ed268e8851dbd2a728a42558b03f6ff55111110f87aa52e7fc33380c3b1b447f";
-    public static final long JWT_EXPIRATION_MS = 1000 * 60 * 60;
-
+    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 15; // 15 minutes
+    private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7 days
+    
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -29,20 +30,25 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+    public String generateAccessToken(UserDetails userDetails) {
+        return generateToken(new HashMap<>(), userDetails, ACCESS_TOKEN_EXPIRATION);
     }
-
+    
+    public String generateRefreshToken(UserDetails userDetails) {
+        return generateToken(new HashMap<>(), userDetails, REFRESH_TOKEN_EXPIRATION);
+    }
+    
     public String generateToken(
             Map<String, Object> extraClaims,
-            UserDetails userDetails
+            UserDetails userDetails,
+            long expiration
     ) {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -73,5 +79,21 @@ public class JwtService {
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+    
+    public boolean isRefreshToken(String token) {
+        Date expiration = extractExpiration(token);
+        Date now = new Date();
+        long timeUntilExpiration = expiration.getTime() - now.getTime();
+        
+        // If token expires in more than access token expiration time, it's likely a refresh token
+        return timeUntilExpiration > ACCESS_TOKEN_EXPIRATION;
+    }
+    
+    public boolean isValidRefreshToken(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername()) && 
+                !isTokenExpired(token) && 
+                isRefreshToken(token));
     }
 }

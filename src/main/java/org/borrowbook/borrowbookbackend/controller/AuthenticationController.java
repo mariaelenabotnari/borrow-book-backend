@@ -1,12 +1,15 @@
 package org.borrowbook.borrowbookbackend.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.service.AuthenticationService;
 import org.borrowbook.borrowbookbackend.service.OAuthService;
+import org.borrowbook.borrowbookbackend.service.RefreshTokenService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,6 +20,7 @@ public class AuthenticationController {
 
     private final AuthenticationService service;
     private final OAuthService oAuthService;
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -25,8 +29,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public SessionResponse login(@Valid @RequestBody AuthenticationRequest request) {
-        return service.loginAndSendCode(request);
+    public SessionResponse login(@Valid @RequestBody AuthenticationRequest request, HttpServletResponse response) {
+        return service.loginAndSendCode(request, response);
     }
 
     @PostMapping("/verify-code")
@@ -42,4 +46,12 @@ public class AuthenticationController {
     @GetMapping("/get")
     public void get(){}
 
+    @PostMapping("/refreshtoken")
+    public ResponseEntity<Void> refreshToken(
+            HttpServletRequest request, 
+            HttpServletResponse response) {
+        
+        refreshTokenService.refreshAccessToken(request, response);
+        return ResponseEntity.ok().build();
+    }
 }

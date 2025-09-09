@@ -1,11 +1,10 @@
 package org.borrowbook.borrowbookbackend.service;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.borrowbook.borrowbookbackend.exception.*;
 import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.model.entity.User;
-import org.borrowbook.borrowbookbackend.exception.*;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
 import org.borrowbook.borrowbookbackend.util.Generator;
 import org.springframework.http.ResponseCookie;
@@ -51,11 +50,11 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public SessionResponse loginAndSendCode(AuthenticationRequest request) {
+    public SessionResponse loginAndSendCode(AuthenticationRequest request, HttpServletResponse response) {
         this.checkRateLimit("login", request.getUsername());
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
         User user = (User) authentication.getPrincipal();
@@ -77,16 +76,25 @@ public class AuthenticationService {
         repository.save(user);
 
         repository.findAllByEmail(session.getEmail()).stream()
-                .filter(u -> !u.getUsername().equals(session.getUsername()) && !u.isActivated())
-                .forEach(repository::delete);
+            .filter(u -> !u.getUsername().equals(session.getUsername()) && !u.isActivated())
+            .forEach(repository::delete);
 
-        String jwtToken = jwtService.generateToken(user);
-        response.addHeader("Set-Cookie", cookieService.createJwtCookie(jwtToken).toString());
+        setAuthTokensInCookies(user, response);
 
         rateLimiterService.deleteRateLimit(session.getEmail(), "register");
         rateLimiterService.deleteRateLimit(session.getUsername(), "login");
     }
 
+    private void setAuthTokensInCookies(User user, HttpServletResponse response) {
+        var accessToken = jwtService.generateAccessToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
+
+        ResponseCookie accessTokenCookie = cookieService.createAccessTokenCookie(accessToken);
+        ResponseCookie refreshTokenCookie = cookieService.createRefreshTokenCookie(refreshToken);
+
+        response.addHeader("Set-Cookie", accessTokenCookie.toString());
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+    }
 
     private SessionResponse sendCode(User user, boolean isNew) {
         String code = generator.generateOTP();
