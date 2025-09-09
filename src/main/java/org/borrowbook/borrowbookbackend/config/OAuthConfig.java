@@ -8,6 +8,7 @@ import org.borrowbook.borrowbookbackend.exception.EmailInUseException;
 import org.borrowbook.borrowbookbackend.exception.NotFoundException;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
+import org.borrowbook.borrowbookbackend.service.CookieService;
 import org.borrowbook.borrowbookbackend.service.JwtService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -23,6 +24,7 @@ import java.io.IOException;
 public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final CookieService cookieService;
 
     @Value("${application.frontend.url}")
     private String frontendUrl;
@@ -50,14 +52,12 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
             throw new NotFoundException("No account registered with Google for this email.");
         }
 
-        String token = jwtService.generateToken(user);
+        String jwtToken = jwtService.generateToken(user);
+        response.addHeader("Set-Cookie", cookieService.createJwtCookie(jwtToken).toString());
 
-        String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl)
-                .path("/auth-callback")
-                .queryParam("token", token)
-                .build().toUriString();
-
-        getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+        response.setContentType("application/json");
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.getWriter().write("{\"message\":\"Login successful\"}");
     }
 
     public String extractUsername(String email) {

@@ -5,7 +5,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.service.AuthenticationService;
-import org.borrowbook.borrowbookbackend.service.OAuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
 
     private final AuthenticationService service;
-    private final OAuthService oAuthService;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
