@@ -35,8 +35,7 @@ public class SecurityConfiguration {
     private final UserDetailsService userDetailsService;
     private final JwtAuthentificationFilter jwtAuthFilter;
     private final OAuthConfig oAuthConfig;
-
-    private final boolean csrfEnabled = true;
+    private final CsrfAwareAuthenticationEntryPoint  csrfAwareAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -61,7 +60,7 @@ public class SecurityConfiguration {
                     .failureHandler((req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
             )
             .exceptionHandling(ex -> ex
-                    .authenticationEntryPoint((req, res, e) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                    .authenticationEntryPoint(csrfAwareAuthenticationEntryPoint)
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
