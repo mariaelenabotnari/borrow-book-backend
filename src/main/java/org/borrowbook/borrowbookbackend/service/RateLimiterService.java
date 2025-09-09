@@ -1,11 +1,9 @@
 package org.borrowbook.borrowbookbackend.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import javax.management.openmbean.ArrayType;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;

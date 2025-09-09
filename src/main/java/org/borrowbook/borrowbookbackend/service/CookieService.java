@@ -65,4 +65,12 @@ public class CookieService {
                 .path("/")
                 .build();
     }
+
+    public void setAuthTokensInCookies(String accessToken, String refreshToken, HttpServletResponse response) {
+        ResponseCookie accessTokenCookie = createAccessTokenCookie(accessToken);
+        ResponseCookie refreshTokenCookie = createRefreshTokenCookie(refreshToken);
+
+        response.addHeader("Set-Cookie", accessTokenCookie.toString());
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+    }
 }

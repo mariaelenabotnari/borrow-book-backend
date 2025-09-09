@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.Role;
-import org.borrowbook.borrowbookbackend.exception.EmailInUseException;
 import org.borrowbook.borrowbookbackend.exception.NotFoundException;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
@@ -15,7 +14,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 
@@ -52,8 +50,10 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
             throw new NotFoundException("No account registered with Google for this email.");
         }
 
-        String jwtToken = jwtService.generateToken(user);
-        response.addHeader("Set-Cookie", cookieService.createJwtCookie(jwtToken).toString());
+        var accessToken = jwtService.generateAccessToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
+
+        cookieService.setAuthTokensInCookies(accessToken, refreshToken, response);
 
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_OK);

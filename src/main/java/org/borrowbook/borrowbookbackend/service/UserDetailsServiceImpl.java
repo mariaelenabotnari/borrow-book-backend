@@ -1,7 +1,6 @@
 package org.borrowbook.borrowbookbackend.service;
 
 import lombok.AllArgsConstructor;
-import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

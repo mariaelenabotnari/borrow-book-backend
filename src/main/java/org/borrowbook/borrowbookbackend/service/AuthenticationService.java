@@ -7,7 +7,6 @@ import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
 import org.borrowbook.borrowbookbackend.util.Generator;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -79,21 +78,13 @@ public class AuthenticationService {
             .filter(u -> !u.getUsername().equals(session.getUsername()) && !u.isActivated())
             .forEach(repository::delete);
 
-        setAuthTokensInCookies(user, response);
-
-        rateLimiterService.deleteRateLimit(session.getEmail(), "register");
-        rateLimiterService.deleteRateLimit(session.getUsername(), "login");
-    }
-
-    private void setAuthTokensInCookies(User user, HttpServletResponse response) {
         var accessToken = jwtService.generateAccessToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
 
-        ResponseCookie accessTokenCookie = cookieService.createAccessTokenCookie(accessToken);
-        ResponseCookie refreshTokenCookie = cookieService.createRefreshTokenCookie(refreshToken);
+        cookieService.setAuthTokensInCookies(accessToken, refreshToken, response);
 
-        response.addHeader("Set-Cookie", accessTokenCookie.toString());
-        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+        rateLimiterService.deleteRateLimit(session.getEmail(), "register");
+        rateLimiterService.deleteRateLimit(session.getUsername(), "login");
     }
 
     private SessionResponse sendCode(User user, boolean isNew) {
