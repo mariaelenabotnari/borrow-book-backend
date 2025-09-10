@@ -9,6 +9,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -101,6 +102,14 @@ public class GlobalExceptionHandler {
                 ZonedDateTime.now(ZoneId.of("UTC"))
         );
         return new ResponseEntity<>(globalException, status);
+    }
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Void> handleNoResourceFound(NoResourceFoundException ex) throws NoResourceFoundException {
+        String path = ex.getResourcePath();
+        if (path.equals("/favicon.ico") || path.startsWith("/.well-known/")) {
+            return ResponseEntity.noContent().build(); // 204 instead of 500
+        }
+        throw ex;
     }
 }
 
