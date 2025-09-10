@@ -46,6 +46,16 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
 
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_OK);
+
+        String targetUrl = frontendUrl + "/welcome";
+        setDefaultTargetUrl(targetUrl);
+
+        try {
+            getRedirectStrategy().sendRedirect(request, response, targetUrl);
+        } catch (Exception e) {
+            throw new RuntimeException("Redirect failed", e);
+        }
+
     }
 
     public String extractUsername(String email) {
