@@ -60,6 +60,7 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
 
         String targetUrl = frontendUrl + "/profile";
         setDefaultTargetUrl(targetUrl);
+
         try {
             getRedirectStrategy().sendRedirect(request, response, targetUrl);
         } catch (Exception e) {
