@@ -86,7 +86,6 @@ public class JwtService {
         Date now = new Date();
         long timeUntilExpiration = expiration.getTime() - now.getTime();
         
-        // If token expires in more than access token expiration time, it's likely a refresh token
         return timeUntilExpiration > ACCESS_TOKEN_EXPIRATION;
     }
     

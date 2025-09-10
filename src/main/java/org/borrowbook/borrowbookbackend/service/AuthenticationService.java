@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -28,6 +30,7 @@ public class AuthenticationService {
     private final Generator generator;
     private final CodeVerificationService codeVerificationService;
     private final RateLimiterService rateLimiterService;
+    private final RefreshTokenPersistenceService  refreshTokenPersistenceService;
 
     @Transactional
     public SessionResponse registerAndSendCode(RegisterRequest request) {
@@ -80,6 +83,12 @@ public class AuthenticationService {
 
         var accessToken = jwtService.generateAccessToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
+
+        refreshTokenPersistenceService.storeRefreshToken(
+                user.getEmail(),
+                refreshToken,
+                Duration.ofDays(7)
+        );
 
         cookieService.setAuthTokensInCookies(accessToken, refreshToken, response);
 

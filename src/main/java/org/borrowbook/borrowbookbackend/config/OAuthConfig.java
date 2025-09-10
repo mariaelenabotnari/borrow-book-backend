@@ -8,11 +8,14 @@ import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
 import org.borrowbook.borrowbookbackend.service.CookieService;
 import org.borrowbook.borrowbookbackend.service.JwtService;
+import org.borrowbook.borrowbookbackend.service.RefreshTokenPersistenceService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+
+import java.time.Duration;
 
 @Component
 @RequiredArgsConstructor
@@ -20,9 +23,9 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final CookieService cookieService;
+    private final RefreshTokenPersistenceService refreshTokenPersistenceService;
 
     @Value("${application.frontend.url}")
-    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
@@ -41,6 +44,12 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
 
         var accessToken = jwtService.generateAccessToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
+
+        refreshTokenPersistenceService.storeRefreshToken(
+                user.getEmail(),
+                refreshToken,
+                Duration.ofDays(7)
+        );
 
         cookieService.setAuthTokensInCookies(accessToken, refreshToken, response);
 
