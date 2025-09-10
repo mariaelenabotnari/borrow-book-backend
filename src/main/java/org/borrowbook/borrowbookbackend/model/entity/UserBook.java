@@ -14,11 +14,14 @@ public class UserBook {
     @Id
     @GeneratedValue
     Integer id;
+
     @Column(nullable = false)
     String status;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="ownerId", nullable=false)
-    private User owner;
+    private User ownerId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bookId", nullable = false)
     private Book book;
