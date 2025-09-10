@@ -31,7 +31,7 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
         String googleId = oauth2User.getAttribute("sub");
 
         User user = userRepository.findByEmailAndActivatedTrue(email).orElseGet(() -> {
-            User newUser = new User(email, extractUsername(email), googleId, true);
+            User newUser = new User(extractUsername(email),email, googleId, true);
             return userRepository.save(newUser);
         });
 
