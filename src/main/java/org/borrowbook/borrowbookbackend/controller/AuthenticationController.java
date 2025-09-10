@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
 
     private final AuthenticationService service;
-
     private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/register")
@@ -50,5 +49,11 @@ public class AuthenticationController {
         
         refreshTokenService.refreshAccessToken(request, response);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        service.logout(request, response);
+        return ResponseEntity.ok("Logged out successfully");
     }
 }

@@ -35,6 +35,10 @@ public class CookieService {
         return getTokenFromCookies(request.getCookies(), REFRESH_TOKEN_COOKIE_NAME);
     }
 
+    public String extractAccessTokenFromRequest(HttpServletRequest request) {
+        return getTokenFromCookies(request.getCookies(), ACCESS_TOKEN_COOKIE_NAME);
+    }
+
     private String getTokenFromCookies(Cookie[] cookies, String cookieName) {
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -73,4 +77,26 @@ public class CookieService {
         response.addHeader("Set-Cookie", accessTokenCookie.toString());
         response.addHeader("Set-Cookie", refreshTokenCookie.toString());
     }
+
+    public void clearAuthCookies(HttpServletResponse response) {
+        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        response.addHeader("Set-Cookie", accessTokenCookie.toString());
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+    }
+
 }

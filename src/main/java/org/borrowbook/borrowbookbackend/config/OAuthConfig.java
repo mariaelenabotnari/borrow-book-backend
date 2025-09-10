@@ -26,6 +26,7 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
     private final RefreshTokenPersistenceService refreshTokenPersistenceService;
 
     @Value("${application.frontend.url}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {

@@ -1,5 +1,6 @@
 package org.borrowbook.borrowbookbackend.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.exception.*;
@@ -30,7 +31,7 @@ public class AuthenticationService {
     private final Generator generator;
     private final CodeVerificationService codeVerificationService;
     private final RateLimiterService rateLimiterService;
-    private final RefreshTokenPersistenceService  refreshTokenPersistenceService;
+    private final RefreshTokenPersistenceService refreshTokenPersistenceService;
 
     @Transactional
     public SessionResponse registerAndSendCode(RegisterRequest request) {
@@ -56,7 +57,7 @@ public class AuthenticationService {
         this.checkRateLimit("login", request.getUsername());
 
         Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
         User user = (User) authentication.getPrincipal();
@@ -78,8 +79,8 @@ public class AuthenticationService {
         repository.save(user);
 
         repository.findAllByEmail(session.getEmail()).stream()
-            .filter(u -> !u.getUsername().equals(session.getUsername()) && !u.isActivated())
-            .forEach(repository::delete);
+                .filter(u -> !u.getUsername().equals(session.getUsername()) && !u.isActivated())
+                .forEach(repository::delete);
 
         var accessToken = jwtService.generateAccessToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
@@ -94,6 +95,22 @@ public class AuthenticationService {
 
         rateLimiterService.deleteRateLimit(session.getEmail(), "register");
         rateLimiterService.deleteRateLimit(session.getUsername(), "login");
+    }
+
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        String accessToken = cookieService.extractAccessTokenFromRequest(request);
+
+        if (accessToken == null || accessToken.isEmpty()) {
+            throw new RefreshTokenException("No active session found");
+        }
+
+        String username = jwtService.extractUsername(accessToken);
+        User user = repository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        refreshTokenPersistenceService.removeRefreshToken(user.getEmail());
+
+        cookieService.clearAuthCookies(response);
     }
 
     private SessionResponse sendCode(User user, boolean isNew) {
