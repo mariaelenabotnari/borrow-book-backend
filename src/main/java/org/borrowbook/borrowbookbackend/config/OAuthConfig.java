@@ -3,7 +3,6 @@ package org.borrowbook.borrowbookbackend.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.borrowbook.borrowbookbackend.Role;
 import org.borrowbook.borrowbookbackend.exception.NotFoundException;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
@@ -14,8 +13,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
@@ -28,21 +25,13 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
     private String frontendUrl;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        Authentication authentication) throws IOException {
-
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         DefaultOAuth2User oauth2User = (DefaultOAuth2User) authentication.getPrincipal();
         String email = oauth2User.getAttribute("email");
         String googleId = oauth2User.getAttribute("sub");
 
-        User user = userRepository.findByEmail(email).orElseGet(() -> {
-            User newUser = new User();
-            newUser.setEmail(email);
-            newUser.setUsername(extractUsername(email));
-            newUser.setGoogleId(googleId);
-            newUser.setActivated(true);
-            newUser.setRole(Role.USER);
+        User user = userRepository.findByEmailAndActivatedTrue(email).orElseGet(() -> {
+            User newUser = new User(email, extractUsername(email), googleId, true);
             return userRepository.save(newUser);
         });
 
@@ -57,7 +46,6 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
 
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().write("{\"message\":\"Login successful\"}");
     }
 
     public String extractUsername(String email) {

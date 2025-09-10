@@ -27,6 +27,7 @@ public class User implements UserDetails {
     private String email;
     private String password;
     private boolean activated;
+    @Column(unique = true)
     private String googleId;
     @Enumerated(EnumType.STRING)
     private Role role;
@@ -38,6 +39,14 @@ public class User implements UserDetails {
         this.role = Role.USER;
         this.activated = false;
         this.googleId = null;
+    }
+
+    public User(String username,String email, String googleId, boolean isActivated) {
+        this.username = username;
+        this.email = email;
+        this.googleId = googleId;
+        this.activated = isActivated;
+        this.role = Role.USER;
     }
 
     @Override
