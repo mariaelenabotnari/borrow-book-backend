@@ -8,6 +8,4 @@ import java.util.List;
 
 public interface UserBookRepository extends JpaRepository<UserBook, Long> {
     List<UserBook> findByOwnerId(Integer ownerId);
-    List<UserBook> findByOwner_Username(String username);
-    List<UserBook> findByBook_GoogleBookId(String googleBookId);
 }

@@ -19,11 +19,11 @@ public class BorrowRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="user_book_id", nullable=false)
-    User user;
+    private UserBook userBook;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="borrower_id", nullable=false)
-    UserBook borrower;
+    private User borrower;
 
     @Column(nullable = false)
     String status;
