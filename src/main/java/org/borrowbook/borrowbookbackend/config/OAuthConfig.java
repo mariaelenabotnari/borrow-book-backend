@@ -47,7 +47,7 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_OK);
 
-        String targetUrl = frontendUrl + "/welcome";
+        String targetUrl = frontendUrl + "/profile";
         setDefaultTargetUrl(targetUrl);
 
         try {

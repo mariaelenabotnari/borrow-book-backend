@@ -18,12 +18,14 @@ public class Book {
     private Integer id;
     @Column(unique = true)
     private String googleBookId;
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1000)
     private String title;
     @ElementCollection
     @CollectionTable(name = "book_author", joinColumns = @JoinColumn(name = "book_id"))
     @Column(name = "author")
     private List<String> author;
+    @Column(length = 500)
     private String publisher;
+    @Column(length = 1000)
     private String imageLink;
 }
