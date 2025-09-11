@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.borrowbook.borrowbookbackend.model.enums.BookStatus;
 
 @Data
 @NoArgsConstructor
@@ -16,7 +17,8 @@ public class UserBook {
     Integer id;
 
     @Column(nullable = false)
-    String status;
+    @Enumerated(EnumType.STRING)
+    private BookStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="ownerId", nullable=false)
