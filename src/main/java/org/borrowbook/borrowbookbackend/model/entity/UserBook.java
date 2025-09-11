@@ -20,7 +20,7 @@ public class UserBook {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="ownerId", nullable=false)
-    private User ownerId;
+    private User owner;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bookId", nullable = false)

@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,7 +20,10 @@ public class Book {
     private String googleBookId;
     @Column(nullable = false)
     private String title;
-    @Column(nullable = false)
-    private String author;
+    @ElementCollection
+    @CollectionTable(name = "book_author", joinColumns = @JoinColumn(name = "book_id"))
+    @Column(name = "author")
+    private List<String> author;
     private String publisher;
+    private String imageLink;
 }
