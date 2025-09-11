@@ -66,8 +66,7 @@ public class SecurityConfiguration {
                         "/swagger-ui.html",
                         "/v3/api-docs/**",
                         "/favicon.ico",
-                        "/.well-known/**"
-                ).permitAll()
+                        "/.well-known/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
