@@ -3,40 +3,52 @@ package org.borrowbook.borrowbookbackend.service;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.borrowbook.borrowbookbackend.config.CookieProperties;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CookieService {
 
-    private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
-    private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
-    private static final int ACCESS_TOKEN_MAX_AGE = 15 * 60; // 15 minutes
-    private static final int REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
+    private final CookieProperties  cookieProperties;
 
-    public String getJwtFromCookies(Cookie[] cookies) {
-        return getTokenFromCookies(cookies, ACCESS_TOKEN_COOKIE_NAME);
-    }
-
-    public void clearJwtCookie(HttpServletResponse response) {
-        ResponseCookie clearCookie = createClearCookie(ACCESS_TOKEN_COOKIE_NAME);
-        response.addHeader("Set-Cookie", clearCookie.toString());
-    }
-
-    public ResponseCookie createAccessTokenCookie(String token) {
-        return createTokenCookie(ACCESS_TOKEN_COOKIE_NAME, token, ACCESS_TOKEN_MAX_AGE);
-    }
-
-    public ResponseCookie createRefreshTokenCookie(String token) {
-        return createTokenCookie(REFRESH_TOKEN_COOKIE_NAME, token, REFRESH_TOKEN_MAX_AGE);
+    public String extractAccessTokenFromRequest(HttpServletRequest request) {
+        return getTokenFromCookies(request.getCookies(), cookieProperties.getAccessToken().getName());
     }
 
     public String extractRefreshTokenFromRequest(HttpServletRequest request) {
-        return getTokenFromCookies(request.getCookies(), REFRESH_TOKEN_COOKIE_NAME);
+        return getTokenFromCookies(request.getCookies(), cookieProperties.getRefreshToken().getName());
     }
 
-    public String extractAccessTokenFromRequest(HttpServletRequest request) {
-        return getTokenFromCookies(request.getCookies(), ACCESS_TOKEN_COOKIE_NAME);
+    public void setAuthTokensInCookies(String accessToken, String refreshToken, HttpServletResponse response) {
+        ResponseCookie accessTokenCookie = createAccessTokenCookie(accessToken);
+        ResponseCookie refreshTokenCookie = createRefreshTokenCookie(refreshToken);
+
+        response.addHeader("Set-Cookie", accessTokenCookie.toString());
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+    }
+
+    public ResponseCookie createAccessTokenCookie(String token) {
+        return createTokenCookie(
+                cookieProperties.getAccessToken().getName(), token, cookieProperties.getAccessToken().getMaxAgeSeconds());
+    }
+
+    public ResponseCookie createRefreshTokenCookie(String token) {
+        return createTokenCookie(
+                cookieProperties.getRefreshToken().getName(), token, cookieProperties.getRefreshToken().getMaxAgeSeconds());
+    }
+
+    public void clearAuthCookies(HttpServletResponse response) {
+        System.out.println("Clearing cookies...");
+        clearCookie(cookieProperties.getAccessToken().getName(), response);
+        clearCookie(cookieProperties.getRefreshToken().getName(), response);
+        System.out.println("Cookies cleared: " + cookieProperties.getAccessToken().getName() + ", " + cookieProperties.getRefreshToken().getName());
+    }
+
+    public void clearJwtCookie(HttpServletResponse response) {
+        clearCookie(cookieProperties.getAccessToken().getName(), response);
     }
 
     private String getTokenFromCookies(Cookie[] cookies, String cookieName) {
@@ -60,43 +72,15 @@ public class CookieService {
                 .build();
     }
 
-    private ResponseCookie createClearCookie(String name) {
-        return ResponseCookie.from(name, "")
+    private void clearCookie(String cookieName, HttpServletResponse response) {
+        ResponseCookie clearCookie = ResponseCookie.from(cookieName, "")
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
                 .maxAge(0)
                 .path("/")
                 .build();
+
+        response.addHeader("Set-Cookie", clearCookie.toString());
     }
-
-    public void setAuthTokensInCookies(String accessToken, String refreshToken, HttpServletResponse response) {
-        ResponseCookie accessTokenCookie = createAccessTokenCookie(accessToken);
-        ResponseCookie refreshTokenCookie = createRefreshTokenCookie(refreshToken);
-
-        response.addHeader("Set-Cookie", accessTokenCookie.toString());
-        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
-    }
-
-    public void clearAuthCookies(HttpServletResponse response) {
-        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
-                .path("/")
-                .maxAge(0)
-                .build();
-
-        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
-                .path("/")
-                .maxAge(0)
-                .build();
-
-        response.addHeader("Set-Cookie", accessTokenCookie.toString());
-        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
-    }
-
 }

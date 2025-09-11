@@ -1,6 +1,7 @@
 package org.borrowbook.borrowbookbackend.service;
 
 import lombok.RequiredArgsConstructor;
+import org.borrowbook.borrowbookbackend.config.RateLimitProperties;
 import org.borrowbook.borrowbookbackend.exception.MaxOtpAttemptsExceededException;
 import org.borrowbook.borrowbookbackend.model.dto.VerificationSession;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,9 +16,7 @@ public class CodeVerificationService {
 
     private final RedisTemplate<String, VerificationSession> sessionRedisTemplate;
     private final RedisTemplate<String, String> emailRedisTemplate;
-
-    private final Duration defaultTTL = Duration.ofMinutes(15);
-    private final int maxAttempts = 5;
+    private final RateLimitProperties rateLimitProperties;
 
     private String buildSessionKey(String sessionId) {
         return "verification:session:" + sessionId;
@@ -28,7 +27,8 @@ public class CodeVerificationService {
     }
 
     public void storeSession(String sessionId, VerificationSession session) {
-        sessionRedisTemplate.opsForValue().set(buildSessionKey(sessionId), session, defaultTTL);
+        sessionRedisTemplate.opsForValue().set(
+                buildSessionKey(sessionId), session, Duration.ofSeconds(rateLimitProperties.getDefaultTTLSeconds()));
     }
 
     public void addSessionToEmail(String email, String sessionId) {
@@ -53,7 +53,7 @@ public class CodeVerificationService {
 
     private void incrementAttempts(String sessionId, VerificationSession session) {
         session.setAttemptCount(session.getAttemptCount() + 1);
-        if (session.getAttemptCount() >= maxAttempts) {
+        if (session.getAttemptCount() >= rateLimitProperties.getMaxAttempts()) {
             deleteSession(sessionId);
             throw new MaxOtpAttemptsExceededException("Maximum OTP attempts reached. Please request a new code.");
         }

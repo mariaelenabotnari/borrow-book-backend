@@ -5,6 +5,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
+import org.borrowbook.borrowbookbackend.config.CookieProperties;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +17,11 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
 public class JwtService {
     
     private static final String SECRET_KEY = "ed268e8851dbd2a728a42558b03f6ff55111110f87aa52e7fc33380c3b1b447f";
-    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 15; // 15 minutes
-    private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7 days
+    private final CookieProperties cookieProperties;
     
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -31,11 +33,13 @@ public class JwtService {
     }
 
     public String generateAccessToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails, ACCESS_TOKEN_EXPIRATION);
+        return generateToken(
+                new HashMap<>(), userDetails, cookieProperties.getAccessToken().getMaxAgeSeconds() * 1000L);
     }
     
     public String generateRefreshToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails, REFRESH_TOKEN_EXPIRATION);
+        return generateToken(
+                new HashMap<>(), userDetails, cookieProperties.getRefreshToken().getMaxAgeSeconds() * 1000L);
     }
     
     public String generateToken(
@@ -86,7 +90,7 @@ public class JwtService {
         Date now = new Date();
         long timeUntilExpiration = expiration.getTime() - now.getTime();
         
-        return timeUntilExpiration > ACCESS_TOKEN_EXPIRATION;
+        return timeUntilExpiration > cookieProperties.getAccessToken().getMaxAgeSeconds() * 1000L;
     }
     
     public boolean isValidRefreshToken(String token, UserDetails userDetails) {

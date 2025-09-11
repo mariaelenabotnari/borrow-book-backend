@@ -3,6 +3,8 @@ package org.borrowbook.borrowbookbackend.service;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.borrowbook.borrowbookbackend.config.CookieProperties;
+import org.borrowbook.borrowbookbackend.config.RateLimitProperties;
 import org.borrowbook.borrowbookbackend.exception.*;
 import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.model.entity.User;
@@ -32,6 +34,8 @@ public class AuthenticationService {
     private final CodeVerificationService codeVerificationService;
     private final RateLimiterService rateLimiterService;
     private final RefreshTokenPersistenceService refreshTokenPersistenceService;
+    private final CookieProperties cookieProperties;
+    private final RateLimitProperties rateLimitProperties;
 
     @Transactional
     public SessionResponse registerAndSendCode(RegisterRequest request) {
@@ -88,7 +92,7 @@ public class AuthenticationService {
         refreshTokenPersistenceService.storeRefreshToken(
                 user.getEmail(),
                 refreshToken,
-                Duration.ofDays(7)
+                Duration.ofSeconds(cookieProperties.getRefreshToken().getMaxAgeSeconds())
         );
 
         cookieService.setAuthTokensInCookies(accessToken, refreshToken, response);
@@ -115,7 +119,8 @@ public class AuthenticationService {
 
     private SessionResponse sendCode(User user, boolean isNew) {
         String code = generator.generateOTP();
-        VerificationSession verificationSession = new VerificationSession(user.getEmail(), user.getUsername(), code, 0);
+        VerificationSession verificationSession = new VerificationSession(
+                user.getEmail(), user.getUsername(), code, 0);
         String sessionId = generator.generateSessionId();
         codeVerificationService.storeSession(sessionId, verificationSession);
         if (isNew) {
@@ -126,7 +131,8 @@ public class AuthenticationService {
     }
 
     private void checkRateLimit(String prefix, String identifier) {
-        long retryAfter = rateLimiterService.checkRateLimit(prefix, identifier, 5, 15 * 60);
+        long retryAfter = rateLimiterService.checkRateLimit(
+                prefix, identifier, rateLimitProperties.getMaxAttempts(), rateLimitProperties.getWindowSeconds());
         if (retryAfter > 0) {
             throw new RateLimitException("Too many login attempts. Try again in " + retryAfter + " seconds.");
         }

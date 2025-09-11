@@ -3,10 +3,7 @@ package org.borrowbook.borrowbookbackend.controller;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -17,4 +14,7 @@ public class TestController {
     public String get(@AuthenticationPrincipal User user){
         return user.getUsername();
     }
+
+    @PostMapping("/post")
+    public String post(@AuthenticationPrincipal User user){ return user.getUsername();}
 }

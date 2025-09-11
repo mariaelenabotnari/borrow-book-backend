@@ -18,18 +18,6 @@ public class CsrfAwareAuthenticationEntryPoint implements AuthenticationEntryPoi
                         HttpServletResponse response,
                         AuthenticationException authException) throws IOException {
         
-        Throwable cause = authException.getCause();
-        if (cause instanceof InvalidCsrfTokenException || cause instanceof MissingCsrfTokenException) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "CSRF token invalid or missing");
-            return;
-        }
-        
-        if (request.getHeader("X-XSRF-TOKEN") == null &&
-            !request.getRequestURI().startsWith("/api/v1/auth/")) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "CSRF token required");
-            return;
-        }
-        
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Authentication required");
     }
 }

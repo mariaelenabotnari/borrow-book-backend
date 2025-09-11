@@ -24,6 +24,7 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
     private final JwtService jwtService;
     private final CookieService cookieService;
     private final RefreshTokenPersistenceService refreshTokenPersistenceService;
+    private final CookieProperties cookieProperties;
 
     @Value("${application.frontend.url}")
     private String frontendUrl;
@@ -49,7 +50,7 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
         refreshTokenPersistenceService.storeRefreshToken(
                 user.getEmail(),
                 refreshToken,
-                Duration.ofDays(7)
+                Duration.ofSeconds(cookieProperties.getRefreshToken().getMaxAgeSeconds())
         );
 
         cookieService.setAuthTokensInCookies(accessToken, refreshToken, response);
