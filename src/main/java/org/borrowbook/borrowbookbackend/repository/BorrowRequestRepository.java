@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface BorrowRequestRepository extends JpaRepository<BorrowRequest, Long> {
-    List<BorrowRequest> findByBorrowerIdAndStatus(Integer borrowerId, String status);
+    List<BorrowRequest> findByBorrowerUsernameAndStatus(String username, String status);
 }
+
