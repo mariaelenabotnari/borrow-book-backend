@@ -1,10 +1,7 @@
 package org.borrowbook.borrowbookbackend.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.borrowbook.borrowbookbackend.model.dto.AddBookRequest;
-import org.borrowbook.borrowbookbackend.model.dto.AddBookResponse;
-import org.borrowbook.borrowbookbackend.model.dto.BookSearchDTO;
-import org.borrowbook.borrowbookbackend.model.dto.SessionResponse;
+import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.model.entity.Book;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.service.BookService;
@@ -20,18 +17,26 @@ import java.util.List;
 public class BookController {
     private final BookService bookService;
 
-    @PostMapping("/user/{userId}")
-    public ResponseEntity<List<Book>> getBooksForUser(@PathVariable Integer userId) {
-        List<Book> books = bookService.fetchBooksUser(userId);
+    @GetMapping("user/collection")
+    public List<CollectionBooks> getBooksForUser(@AuthenticationPrincipal User authPrincipal) {
+        String username = authPrincipal.getUsername();
+        List<CollectionBooks> books = bookService.fetchBooksUser(username);
 
-        return ResponseEntity.ok(books);
+        return books;
     }
 
-    @PostMapping("/borrowed/user/{userId}")
-    public ResponseEntity<SessionResponse> borrowBook(@PathVariable Integer userId) {
-        List<Book> borrowedBooks = bookService.fetchBorrowedBooks(userId);
+    @GetMapping("user/borrowed")
+    public List<BorrowedBooks> borrowBook(@AuthenticationPrincipal User authPrincipal) {
+        String username = authPrincipal.getUsername();
+        List<BorrowedBooks> borrowedBooks = bookService.fetchBorrowedBooks(username);
 
-        return ResponseEntity.ok((SessionResponse) borrowedBooks);
+        return borrowedBooks;
+    }
+
+    @DeleteMapping("/delete/book{bookId}")
+    public void deleteBook(@AuthenticationPrincipal User authPrincipal, @PathVariable Integer bookId) {
+        String username = authPrincipal.getUsername();
+        bookService.deleteBook(username, bookId);
     }
 
     @GetMapping("/search/google")

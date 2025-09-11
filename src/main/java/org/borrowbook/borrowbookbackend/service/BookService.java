@@ -2,10 +2,7 @@ package org.borrowbook.borrowbookbackend.service;
 
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.exception.NotFoundException;
-import org.borrowbook.borrowbookbackend.model.dto.AddBookResponse;
-import org.borrowbook.borrowbookbackend.model.dto.BookSearchDTO;
-import org.borrowbook.borrowbookbackend.model.dto.GoogleBookDTO;
-import org.borrowbook.borrowbookbackend.model.dto.GoogleBookResponeDTO;
+import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.model.entity.Book;
 import org.borrowbook.borrowbookbackend.model.entity.BorrowRequest;
 import org.borrowbook.borrowbookbackend.model.entity.User;
@@ -38,25 +35,49 @@ public class BookService {
     @Value("${google.book.api.key}")
     private String GOOGLE_BOOK_API_KEY;
 
-    public List<Book> fetchBooksUser(Integer userId) {
-        List<UserBook> userBooks = userBookRepository.findByOwner_Id(userId);
-        List<Book> books = new ArrayList<>();
+    public List<CollectionBooks> fetchBooksUser(String username) {
+        List<UserBook> userBooks = userBookRepository.findByOwner_Username(username);
+        List<CollectionBooks> collectionBooksList = new ArrayList<>();
 
         for (UserBook userBook: userBooks) {
-            books.add(userBook.getBook());
+            Book book = userBook.getBook();
+
+            CollectionBooks collectionBook = new CollectionBooks();
+            collectionBook.setTitle(book.getTitle());
+            collectionBook.setAuthors(book.getAuthor());
+            collectionBook.setImageLink(book.getImageLink());
+            collectionBook.setStatus(userBook.getStatus().toString());
+
+            collectionBooksList.add(collectionBook);
         }
-        return books;
+        return collectionBooksList;
     }
 
-    public List<Book> fetchBorrowedBooks(Integer userId) {
-        List<BorrowRequest> borrowRequests = borrowRequestRepository.findByBorrowerIdAndStatus(userId, "available");
-        List<Book> borrowedBooks = new ArrayList<>();
+    public List<BorrowedBooks> fetchBorrowedBooks(String username) {
+        List<BorrowRequest> borrowRequests = borrowRequestRepository.findByBorrowerUsernameAndStatus(username, "borrowed");
+        List<BorrowedBooks> borrowedBooksList = new ArrayList<>();
 
         for (BorrowRequest borrowRequest: borrowRequests) {
+            BorrowedBooks borrowedBook = new BorrowedBooks();
+
             Book book = borrowRequest.getUserBook().getBook();
-            borrowedBooks.add(book);
+            borrowedBook.setTitle(book.getTitle());
+            borrowedBook.setAuthors(book.getAuthor());
+            borrowedBook.setImageLink(book.getImageLink());
+            borrowedBook.setOwnerUsername(borrowRequest.getBorrower().getUsername());
+
+            borrowedBooksList.add(borrowedBook);
         }
-        return borrowedBooks;
+        return borrowedBooksList;
+    }
+
+    public void deleteBook(String username, Integer bookId) {
+        UserBook bookToDelete = userBookRepository.findByOwner_UsernameAndBook_Id(username, bookId);
+
+        if (bookToDelete == null) {
+            throw new NotFoundException("Book not found");
+        }
+        userBookRepository.delete(bookToDelete);
     }
 
     public List<BookSearchDTO> fetchBooksWithGoogle(String query) {
