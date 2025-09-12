@@ -19,9 +19,24 @@ public class CsrfCookieFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+
         if (csrfToken != null) {
             response.setHeader(csrfToken.getHeaderName(), csrfToken.getToken());
+
+            request.setAttribute("_csrf", csrfToken);
+
+            logger.debug("CSRF Token set in response header: " + csrfToken.getHeaderName());
         }
+
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.startsWith("/swagger-ui") ||
+                path.startsWith("/v3/api-docs") ||
+                path.equals("/favicon.ico") ||
+                path.startsWith("/.well-known");
     }
 }
