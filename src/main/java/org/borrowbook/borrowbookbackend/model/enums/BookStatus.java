@@ -20,11 +20,6 @@ public enum BookStatus {
     }
 
     @JsonValue
-    public String toValue() {
-        return this.name();
-    }
-
-    @JsonValue
     public String toString() {
         return this.name();
     }

@@ -1,6 +1,7 @@
 package org.borrowbook.borrowbookbackend.exception.handler;
 
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.borrowbook.borrowbookbackend.exception.*;
 import org.springframework.http.HttpStatus;
@@ -44,7 +45,8 @@ public class GlobalExceptionHandler {
             InvalidCodeException.class,
             EmailServiceException.class,
             RateLimitException.class,
-            MaxOtpAttemptsExceededException.class
+            MaxOtpAttemptsExceededException.class,
+            EntityNotFoundException.class
     })
     public ResponseEntity<Object> handleBadRequestException(RuntimeException ex) {
         log.error(ex.getMessage(), ex.getCause());
