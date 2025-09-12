@@ -55,7 +55,7 @@ public class BookService {
     }
 
     public List<BorrowedBooks> fetchBorrowedBooks(String username) {
-        List<BorrowRequest> borrowRequests = borrowRequestRepository.findByBorrowerUsernameAndStatus(username, "borrowed");
+            List<BorrowRequest> borrowRequests = borrowRequestRepository.findByBorrowerUsernameAndStatus(username, "BORROWED");
         List<BorrowedBooks> borrowedBooksList = new ArrayList<>();
 
         for (BorrowRequest borrowRequest: borrowRequests) {
@@ -65,7 +65,7 @@ public class BookService {
             borrowedBook.setTitle(book.getTitle());
             borrowedBook.setAuthors(book.getAuthor());
             borrowedBook.setImageLink(book.getImageLink());
-            borrowedBook.setOwnerUsername(borrowRequest.getBorrower().getUsername());
+            borrowedBook.setOwnerUsername(borrowRequest.getUserBook().getOwner().getUsername());
 
             borrowedBooksList.add(borrowedBook);
         }
