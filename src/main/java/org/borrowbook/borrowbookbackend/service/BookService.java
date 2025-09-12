@@ -1,5 +1,6 @@
 package org.borrowbook.borrowbookbackend.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.exception.NotFoundException;
 import org.borrowbook.borrowbookbackend.model.dto.*;
@@ -71,13 +72,11 @@ public class BookService {
         return borrowedBooksList;
     }
 
-    public void deleteBook(String username, Integer bookId) {
-        UserBook bookToDelete = userBookRepository.findByOwner_UsernameAndBook_Id(username, bookId);
+    public void deleteBook(String username, int userBookId) {
+        UserBook userBook = userBookRepository.findByIdAndOwner_Username(userBookId, username)
+                .orElseThrow(() -> new EntityNotFoundException("Book not found or not owned by user"));
 
-        if (bookToDelete == null) {
-            throw new NotFoundException("Book not found");
-        }
-        userBookRepository.delete(bookToDelete);
+        userBookRepository.delete(userBook);
     }
 
     public List<BookSearchDTO> fetchBooksWithGoogle(String query) {

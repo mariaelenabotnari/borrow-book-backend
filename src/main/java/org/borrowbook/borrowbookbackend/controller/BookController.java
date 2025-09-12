@@ -17,7 +17,7 @@ import java.util.List;
 public class BookController {
     private final BookService bookService;
 
-    @GetMapping("user/collection")
+    @GetMapping
     public List<CollectionBooks> getBooksForUser(@AuthenticationPrincipal User authPrincipal) {
         String username = authPrincipal.getUsername();
         List<CollectionBooks> books = bookService.fetchBooksUser(username);
@@ -25,7 +25,7 @@ public class BookController {
         return books;
     }
 
-    @GetMapping("user/borrowed")
+    @GetMapping("/borrowed")
     public List<BorrowedBooks> borrowBook(@AuthenticationPrincipal User authPrincipal) {
         String username = authPrincipal.getUsername();
         List<BorrowedBooks> borrowedBooks = bookService.fetchBorrowedBooks(username);
@@ -33,10 +33,11 @@ public class BookController {
         return borrowedBooks;
     }
 
-    @DeleteMapping("/delete/book{bookId}")
-    public void deleteBook(@AuthenticationPrincipal User authPrincipal, @PathVariable Integer bookId) {
+    @DeleteMapping("/{userBookId}")
+    public ResponseEntity<Void> deleteBook(@AuthenticationPrincipal User authPrincipal, @PathVariable int userBookId) {
         String username = authPrincipal.getUsername();
-        bookService.deleteBook(username, bookId);
+        bookService.deleteBook(username, userBookId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/search/google")
@@ -44,7 +45,7 @@ public class BookController {
         return bookService.fetchBooksWithGoogle(q);
     }
 
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<AddBookResponse> addBook(
             @RequestBody AddBookRequest request, @AuthenticationPrincipal User user)
     {
