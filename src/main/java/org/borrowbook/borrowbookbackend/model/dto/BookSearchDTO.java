@@ -17,6 +17,9 @@ public class BookSearchDTO {
         this.title = googleBook.getVolumeInfo().getTitle();
         this.author = googleBook.getVolumeInfo().getAuthors();
         this.publisher = googleBook.getVolumeInfo().getPublisher();
-        this.imageLink = googleBook.getVolumeInfo().getImageLinks().getThumbnail();
+        if (googleBook.getVolumeInfo().getImageLinks() != null)
+            this.imageLink = googleBook.getVolumeInfo().getImageLinks().getThumbnail();
+        else
+            this.imageLink = null;
     }
 }
