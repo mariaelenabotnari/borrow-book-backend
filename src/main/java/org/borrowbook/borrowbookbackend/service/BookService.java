@@ -44,6 +44,7 @@ public class BookService {
             Book book = userBook.getBook();
 
             CollectionBooks collectionBook = new CollectionBooks();
+            collectionBook.setUserBookId(userBook.getId());
             collectionBook.setTitle(book.getTitle());
             collectionBook.setAuthors(book.getAuthor());
             collectionBook.setImageLink(book.getImageLink());

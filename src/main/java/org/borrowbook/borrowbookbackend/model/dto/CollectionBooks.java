@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CollectionBooks {
+    private Integer userBookId;
     private String title;
     private List<String> authors;
     private String imageLink;
