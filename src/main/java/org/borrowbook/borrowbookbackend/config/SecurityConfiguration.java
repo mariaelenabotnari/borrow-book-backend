@@ -30,6 +30,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 import java.util.List;
 
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -38,14 +39,17 @@ public class SecurityConfiguration {
     private final UserDetailsService userDetailsService;
     private final JwtAuthentificationFilter jwtAuthFilter;
     private final OAuthConfig oAuthConfig;
-    private final CsrfAwareAuthenticationEntryPoint  csrfAwareAuthenticationEntryPoint;
+    private final CsrfAwareAuthenticationEntryPoint csrfAwareAuthenticationEntryPoint;
+    private final CsrfProperties csrfProperties;
+
+    @Bean
+    public StatelessCsrfTokenRepository csrfTokenRepository() {
+        return new StatelessCsrfTokenRepository(csrfProperties);
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        StatelessCsrfTokenRepository csrfTokenRepository = StatelessCsrfTokenRepository.withHttpOnlyFalse();
-        csrfTokenRepository.setCookieMaxAge(3600); // Set cookie to persist for 1 hour (adjust as needed)
-
-        // Create request handler for CSRF
+        StatelessCsrfTokenRepository csrfTokenRepository = csrfTokenRepository();
         CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
         requestHandler.setCsrfRequestAttributeName(CsrfToken.class.getName());
 
