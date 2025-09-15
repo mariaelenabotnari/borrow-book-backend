@@ -14,12 +14,13 @@ public class BookSearchDTO {
 
     public BookSearchDTO(GoogleBookDTO googleBook){
         this.googleBookId = googleBook.getId();
-        this.title = googleBook.getVolumeInfo().getTitle();
-        this.author = googleBook.getVolumeInfo().getAuthors();
-        this.publisher = googleBook.getVolumeInfo().getPublisher();
-        if (googleBook.getVolumeInfo().getImageLinks() != null)
-            this.imageLink = googleBook.getVolumeInfo().getImageLinks().getThumbnail();
-        else
-            this.imageLink = null;
+        if(googleBook.getVolumeInfo() != null ){
+            if(googleBook.getVolumeInfo().getTitle() != null) this.title = googleBook.getVolumeInfo().getTitle();
+            if(googleBook.getVolumeInfo().getAuthors() != null) this.author = googleBook.getVolumeInfo().getAuthors();
+            if(googleBook.getVolumeInfo().getPublisher() != null) this.publisher = googleBook.getVolumeInfo().getPublisher();
+            if (googleBook.getVolumeInfo().getImageLinks() != null) {
+                this.imageLink = googleBook.getVolumeInfo().getImageLinks().getThumbnail();
+            }
+        }
     }
 }

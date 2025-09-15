@@ -36,47 +36,19 @@ public class BookService {
     @Value("${google.book.api.key}")
     private String GOOGLE_BOOK_API_KEY;
 
-    public List<CollectionBooks> fetchBooksUser(String username) {
+    public List<CollectionBookDTO> fetchBooksUser(String username) {
         List<UserBook> userBooks = userBookRepository.findByOwner_Username(username);
-        List<CollectionBooks> collectionBooksList = new ArrayList<>();
-
-        for (UserBook userBook: userBooks) {
-            Book book = userBook.getBook();
-
-            CollectionBooks collectionBook = new CollectionBooks();
-            collectionBook.setUserBookId(userBook.getId());
-            collectionBook.setTitle(book.getTitle());
-            collectionBook.setAuthors(book.getAuthor());
-            collectionBook.setImageLink(book.getImageLink());
-            collectionBook.setStatus(userBook.getStatus().toString());
-
-            collectionBooksList.add(collectionBook);
-        }
-        return collectionBooksList;
+        return userBooks.stream().map(CollectionBookDTO::new).collect(Collectors.toList());
     }
 
-    public List<BorrowedBooks> fetchBorrowedBooks(String username) {
-            List<BorrowRequest> borrowRequests = borrowRequestRepository.findByBorrowerUsernameAndStatus(username, "BORROWED");
-        List<BorrowedBooks> borrowedBooksList = new ArrayList<>();
-
-        for (BorrowRequest borrowRequest: borrowRequests) {
-            BorrowedBooks borrowedBook = new BorrowedBooks();
-
-            Book book = borrowRequest.getUserBook().getBook();
-            borrowedBook.setTitle(book.getTitle());
-            borrowedBook.setAuthors(book.getAuthor());
-            borrowedBook.setImageLink(book.getImageLink());
-            borrowedBook.setOwnerUsername(borrowRequest.getUserBook().getOwner().getUsername());
-
-            borrowedBooksList.add(borrowedBook);
-        }
-        return borrowedBooksList;
+    public List<BorrowedBookDTO> fetchBorrowedBooks(String username) {
+        List<BorrowRequest> borrowRequests = borrowRequestRepository.findByBorrowerUsernameAndStatus(username, "BORROWED");
+        return borrowRequests.stream().map(BorrowedBookDTO::new).collect(Collectors.toList());
     }
 
     public void deleteBook(String username, int userBookId) {
         UserBook userBook = userBookRepository.findByIdAndOwner_Username(userBookId, username)
                 .orElseThrow(() -> new EntityNotFoundException("Book not found or not owned by user"));
-
         userBookRepository.delete(userBook);
     }
 
@@ -94,6 +66,7 @@ public class BookService {
                 .orElseGet(List::of)
                 .stream()
                 .map(BookSearchDTO::new)
+                .filter(bookSearchDTO -> bookSearchDTO.getTitle() != null)
                 .collect(Collectors.toList());
     }
 
@@ -104,24 +77,12 @@ public class BookService {
         if (existingBook.isPresent()) {
             book = existingBook.get();
         } else {
-            // Fetch book details from Google Books API
             GoogleBookDTO googleBookDTO = fetchBookFromGoogleApi(googleBookId);
-            book = mapGoogleBookToBook(googleBookDTO);
+            book = new Book(googleBookDTO);
             book = bookRepository.save(book);
         }
-
-        // Get the managed User entity from database using email
-        User owner = userRepository.findByEmail(user.getEmail())
-                .orElseThrow(() -> new NotFoundException("User not found"));
-
-        // Create UserBook entry
-        UserBook userBook = new UserBook();
-        userBook.setBook(book);
-        userBook.setStatus(status);
-        userBook.setOwner(owner);
-
-        UserBook savedUserBook = userBookRepository.save(userBook);
-        return new AddBookResponse(savedUserBook);
+        UserBook userBook = new UserBook(status, user, book);
+        return new AddBookResponse(userBookRepository.save(userBook));
     }
 
     private GoogleBookDTO fetchBookFromGoogleApi(String googleBookId) {
@@ -133,27 +94,4 @@ public class BookService {
         }
         return googleBookDTO;
     }
-
-    private Book mapGoogleBookToBook(GoogleBookDTO googleBookDTO) {
-        Book book = new Book();
-        book.setGoogleBookId(googleBookDTO.getId());
-
-        GoogleBookDTO.VolumeInfo volumeInfo = googleBookDTO.getVolumeInfo();
-        if (volumeInfo != null) {
-            book.setTitle(volumeInfo.getTitle());
-            book.setAuthor(volumeInfo.getAuthors());
-            book.setPublisher(volumeInfo.getPublisher());
-
-            if (volumeInfo.getImageLinks() != null) {
-                String imageLink = volumeInfo.getImageLinks().getThumbnail();
-                if (imageLink == null) {
-                    imageLink = volumeInfo.getImageLinks().getSmallThumbnail();
-                }
-                book.setImageLink(imageLink);
-            }
-        }
-
-        return book;
-    }
-
 }
