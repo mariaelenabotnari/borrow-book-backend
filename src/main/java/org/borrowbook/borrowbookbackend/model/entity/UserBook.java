@@ -27,4 +27,10 @@ public class UserBook {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bookId", nullable = false)
     private Book book;
+
+    public UserBook(BookStatus status, User user, Book book){
+        this.status = status;
+        this.owner = user;
+        this.book = book;
+    }
 }

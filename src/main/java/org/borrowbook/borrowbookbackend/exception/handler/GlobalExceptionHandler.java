@@ -8,9 +8,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.ZoneId;
@@ -129,5 +134,73 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(globalException, status);
     }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Object> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
+        log.error(ex.getMessage(), ex.getCause());
+        HttpStatus status = HttpStatus.METHOD_NOT_ALLOWED;
+
+        ExceptionResult globalException = new ExceptionResult(
+                "Request method not supported: " + ex.getMethod(),
+                status,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(globalException, status);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Object> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex) {
+        log.error(ex.getMessage(), ex.getCause());
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        ExceptionResult globalException = new ExceptionResult(
+                "Missing required request parameter: " + ex.getParameterName(),
+                status,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(globalException, status);
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<Object> handleMissingServletRequestPartException(MissingServletRequestPartException ex) {
+        log.error(ex.getMessage(), ex.getCause());
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        ExceptionResult globalException = new ExceptionResult(
+                "Missing required request part: " + ex.getRequestPartName(),
+                status,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(globalException, status);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<Object> handleHttpMediaTypeNotAcceptableException(HttpMediaTypeNotAcceptableException ex) {
+        log.error(ex.getMessage(), ex.getCause());
+        HttpStatus status = HttpStatus.NOT_ACCEPTABLE;
+
+        ExceptionResult globalException = new ExceptionResult(
+                "Requested media type is not acceptable",
+                status,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(globalException, status);
+    }
+
+
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<Object> handleHttpMediaTypeNotSupportedException(org.springframework.web.HttpMediaTypeNotSupportedException ex) {
+        log.error(ex.getMessage(), ex.getCause());
+        HttpStatus status = HttpStatus.UNSUPPORTED_MEDIA_TYPE;
+
+        ExceptionResult globalException = new ExceptionResult(
+                "Unsupported media type: " + ex.getContentType(),
+                status,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(globalException, status);
+    }
+
+
 }
 

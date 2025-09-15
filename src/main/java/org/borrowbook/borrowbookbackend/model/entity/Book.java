@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.borrowbook.borrowbookbackend.model.dto.GoogleBookDTO;
 
 import java.util.List;
 
@@ -28,4 +29,16 @@ public class Book {
     private String publisher;
     @Column(length = 1000)
     private String imageLink;
+
+    public Book(GoogleBookDTO googleBook){
+        this.googleBookId = googleBook.getId();
+        if(googleBook.getVolumeInfo() != null ){
+            if(googleBook.getVolumeInfo().getTitle() != null) this.title = googleBook.getVolumeInfo().getTitle();
+            if(googleBook.getVolumeInfo().getAuthors() != null) this.author = googleBook.getVolumeInfo().getAuthors();
+            if(googleBook.getVolumeInfo().getPublisher() != null) this.publisher = googleBook.getVolumeInfo().getPublisher();
+            if (googleBook.getVolumeInfo().getImageLinks() != null) {
+                this.imageLink = googleBook.getVolumeInfo().getImageLinks().getThumbnail();
+            }
+        }
+    }
 }
