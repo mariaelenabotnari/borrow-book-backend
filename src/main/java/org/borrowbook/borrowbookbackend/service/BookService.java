@@ -23,6 +23,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -46,8 +47,26 @@ public class BookService {
     }
 
     public List<BorrowedBookDTO> fetchBorrowedBooks(String username) {
-        List<BorrowRequest> borrowRequests = borrowRequestRepository.findByBorrowerUsernameAndStatus(username, "BORROWED");
+        List<BorrowRequest> borrowRequests = borrowRequestRepository.findByBorrowerUsernameAndUserBookStatus(username, BookStatus.BORROWED);
         return borrowRequests.stream().map(BorrowedBookDTO::new).collect(Collectors.toList());
+    }
+
+    public List<UserBooksDTO> fetchUserBooks(String username) {
+        List<UserBooksDTO> booksList = new ArrayList<>();
+        List<UserBook> userBooks = userBookRepository.findByOwner_Username(username);
+
+        for (UserBook userBook : userBooks) {
+            if (userBook.getStatus() == BookStatus.AVAILABLE) {
+                Book book = userBook.getBook();
+                UserBooksDTO userBooksDTO = new UserBooksDTO();
+                userBooksDTO.setTitle(book.getTitle());
+                userBooksDTO.setAuthors(book.getAuthor());
+                userBooksDTO.setImageLink(book.getImageLink());
+                userBooksDTO.setStatus(BookStatus.AVAILABLE);
+                booksList.add(userBooksDTO);
+            }
+        }
+        return booksList;
     }
 
     public void deleteBook(String username, int userBookId) {

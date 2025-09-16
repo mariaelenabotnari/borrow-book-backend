@@ -21,6 +21,12 @@ public class UserController{
         return new UserDTO(user);
     }
 
+
+    @GetMapping("/books/{username}")
+    public List<UserBooksDTO> getUserBooks(@PathVariable String username) {
+        return bookService.fetchUserBooks(username);
+    }
+
     @GetMapping("/books")
     public List<CollectionBookDTO> getBooksForUser(@AuthenticationPrincipal User authPrincipal) {
         String username = authPrincipal.getUsername();
