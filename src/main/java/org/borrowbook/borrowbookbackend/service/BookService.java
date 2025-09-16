@@ -15,6 +15,7 @@ import org.borrowbook.borrowbookbackend.repository.UserBookRepository;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -88,10 +89,14 @@ public class BookService {
     private GoogleBookDTO fetchBookFromGoogleApi(String googleBookId) {
         String url = "https://www.googleapis.com/books/v1/volumes/" + googleBookId;
 
-        GoogleBookDTO googleBookDTO = restTemplate.getForObject(url, GoogleBookDTO.class);
-        if (googleBookDTO == null) {
-            throw new NotFoundException("Book not found in Google Books API");
+        try {
+            GoogleBookDTO googleBookDTO = restTemplate.getForObject(url, GoogleBookDTO.class);
+            if (googleBookDTO == null) {
+                throw new NotFoundException("Book not found in Google Books API");
+            }
+            return googleBookDTO;
+        } catch (HttpServerErrorException e) {
+            throw new NotFoundException("Google Books API is temporarily unavailable. Please try again later.");
         }
-        return googleBookDTO;
     }
 }
