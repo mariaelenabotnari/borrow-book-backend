@@ -1,7 +1,8 @@
 package org.borrowbook.borrowbookbackend.config;
 
 import lombok.RequiredArgsConstructor;
-import org.borrowbook.borrowbookbackend.model.dto.VerificationSession;
+import org.borrowbook.borrowbookbackend.config.properties.RedisProperties;
+import org.borrowbook.borrowbookbackend.model.dto.VerificationSessionDTO;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -48,11 +49,11 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisTemplate<String, VerificationSession> sessionRedisTemplate() {
-        RedisTemplate<String, VerificationSession> template = new RedisTemplate<>();
+    public RedisTemplate<String, VerificationSessionDTO> sessionRedisTemplate() {
+        RedisTemplate<String, VerificationSessionDTO> template = new RedisTemplate<>();
         template.setConnectionFactory(cacheRedisConnectionFactory());
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new Jackson2JsonRedisSerializer<>(VerificationSession.class));
+        template.setValueSerializer(new Jackson2JsonRedisSerializer<>(VerificationSessionDTO.class));
         return template;
     }
 

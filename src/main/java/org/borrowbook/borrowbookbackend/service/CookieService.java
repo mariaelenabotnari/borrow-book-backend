@@ -4,7 +4,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.borrowbook.borrowbookbackend.config.CookieProperties;
+import org.borrowbook.borrowbookbackend.config.properties.CookieProperties;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 

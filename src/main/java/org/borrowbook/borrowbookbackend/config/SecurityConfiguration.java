@@ -2,6 +2,7 @@ package org.borrowbook.borrowbookbackend.config;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.borrowbook.borrowbookbackend.config.properties.CsrfProperties;
 import org.borrowbook.borrowbookbackend.filter.CsrfCookieFilter;
 import org.borrowbook.borrowbookbackend.filter.JwtAuthentificationFilter;
 import org.springframework.context.annotation.Bean;

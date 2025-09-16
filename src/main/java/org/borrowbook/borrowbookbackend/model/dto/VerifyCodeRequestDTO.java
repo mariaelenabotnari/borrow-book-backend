@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class VerifyCodeRequest {
+public class VerifyCodeRequestDTO {
     @NotBlank(message = "sessionId is required")
     private String sessionId;
 

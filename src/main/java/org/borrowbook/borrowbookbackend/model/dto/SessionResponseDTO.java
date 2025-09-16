@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class SessionResponse {
+public class SessionResponseDTO {
     String sessionId;
 }
 

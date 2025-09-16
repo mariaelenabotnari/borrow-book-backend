@@ -1,4 +1,4 @@
-package org.borrowbook.borrowbookbackend.config;
+package org.borrowbook.borrowbookbackend.config.properties;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

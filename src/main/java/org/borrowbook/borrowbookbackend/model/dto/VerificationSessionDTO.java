@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class VerificationSession {
+public class VerificationSessionDTO {
     private String email;
     private String username;
     private String code;

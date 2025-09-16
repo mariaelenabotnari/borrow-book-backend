@@ -3,8 +3,8 @@ package org.borrowbook.borrowbookbackend.service;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.borrowbook.borrowbookbackend.config.CookieProperties;
-import org.borrowbook.borrowbookbackend.config.RateLimitProperties;
+import org.borrowbook.borrowbookbackend.config.properties.CookieProperties;
+import org.borrowbook.borrowbookbackend.config.properties.RateLimitProperties;
 import org.borrowbook.borrowbookbackend.exception.*;
 import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.model.entity.User;
@@ -38,7 +38,7 @@ public class AuthenticationService {
     private final RateLimitProperties rateLimitProperties;
 
     @Transactional
-    public SessionResponse registerAndSendCode(RegisterRequest request) {
+    public SessionResponseDTO registerAndSendCode(RegisterRequestDTO request) {
         this.checkRateLimit("register", request.getEmail());
 
         if (repository.findByUsername(request.getUsername()).isPresent()) {
@@ -57,7 +57,7 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public SessionResponse loginAndSendCode(AuthenticationRequest request, HttpServletResponse response) {
+    public SessionResponseDTO loginAndSendCode(AuthenticationRequestDTO request, HttpServletResponse response) {
         this.checkRateLimit("login", request.getUsername());
 
         Authentication authentication = authenticationManager.authenticate(
@@ -70,8 +70,8 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public void verifyCode(VerifyCodeRequest request, HttpServletResponse response) {
-        VerificationSession session = codeVerificationService.verifyCode(request.getSessionId(), request.getCode());
+    public void verifyCode(VerifyCodeRequestDTO request, HttpServletResponse response) {
+        VerificationSessionDTO session = codeVerificationService.verifyCode(request.getSessionId(), request.getCode());
 
         if (session == null) {
             throw new InvalidCodeException("Invalid verification code");
@@ -117,17 +117,17 @@ public class AuthenticationService {
         cookieService.clearAuthCookies(response);
     }
 
-    private SessionResponse sendCode(User user, boolean isNew) {
+    private SessionResponseDTO sendCode(User user, boolean isNew) {
         String code = generator.generateOTP();
-        VerificationSession verificationSession = new VerificationSession(
+        VerificationSessionDTO verificationSessionDTO = new VerificationSessionDTO(
                 user.getEmail(), user.getUsername(), code, 0);
         String sessionId = generator.generateSessionId();
-        codeVerificationService.storeSession(sessionId, verificationSession);
+        codeVerificationService.storeSession(sessionId, verificationSessionDTO);
         if (isNew) {
             codeVerificationService.addSessionToEmail(user.getEmail(), sessionId);
         }
         emailService.sendVerificationCode(user.getEmail(), code);
-        return new SessionResponse(sessionId);
+        return new SessionResponseDTO(sessionId);
     }
 
     private void checkRateLimit(String prefix, String identifier) {

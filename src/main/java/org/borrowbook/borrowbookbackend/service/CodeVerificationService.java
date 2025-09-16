@@ -1,9 +1,9 @@
 package org.borrowbook.borrowbookbackend.service;
 
 import lombok.RequiredArgsConstructor;
-import org.borrowbook.borrowbookbackend.config.RateLimitProperties;
+import org.borrowbook.borrowbookbackend.config.properties.RateLimitProperties;
 import org.borrowbook.borrowbookbackend.exception.MaxOtpAttemptsExceededException;
-import org.borrowbook.borrowbookbackend.model.dto.VerificationSession;
+import org.borrowbook.borrowbookbackend.model.dto.VerificationSessionDTO;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +14,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CodeVerificationService {
 
-    private final RedisTemplate<String, VerificationSession> sessionRedisTemplate;
+    private final RedisTemplate<String, VerificationSessionDTO> sessionRedisTemplate;
     private final RedisTemplate<String, String> emailRedisTemplate;
     private final RateLimitProperties rateLimitProperties;
 
@@ -26,7 +26,7 @@ public class CodeVerificationService {
         return "verification:email:" + email;
     }
 
-    public void storeSession(String sessionId, VerificationSession session) {
+    public void storeSession(String sessionId, VerificationSessionDTO session) {
         sessionRedisTemplate.opsForValue().set(
                 buildSessionKey(sessionId), session, Duration.ofSeconds(rateLimitProperties.getDefaultTTLSeconds()));
     }
@@ -51,7 +51,7 @@ public class CodeVerificationService {
         emailRedisTemplate.delete(buildEmailKey(email));
     }
 
-    private void incrementAttempts(String sessionId, VerificationSession session) {
+    private void incrementAttempts(String sessionId, VerificationSessionDTO session) {
         session.setAttemptCount(session.getAttemptCount() + 1);
         if (session.getAttemptCount() >= rateLimitProperties.getMaxAttempts()) {
             deleteSession(sessionId);
@@ -61,8 +61,8 @@ public class CodeVerificationService {
         sessionRedisTemplate.boundValueOps(buildSessionKey(sessionId)).set(session);
     }
 
-    public VerificationSession verifyCode(String sessionId, String code) {
-        VerificationSession session = sessionRedisTemplate.boundValueOps(buildSessionKey(sessionId)).get();
+    public VerificationSessionDTO verifyCode(String sessionId, String code) {
+        VerificationSessionDTO session = sessionRedisTemplate.boundValueOps(buildSessionKey(sessionId)).get();
         if (session == null) return null;
 
         if (session.getCode().equals(code)) {

@@ -19,6 +19,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid or missing CSRF token");
         } else {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access denied");
-        }        }
+        }
+    }
 
 }

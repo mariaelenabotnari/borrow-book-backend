@@ -7,7 +7,7 @@ import org.borrowbook.borrowbookbackend.model.enums.BookStatus;
 import java.util.List;
 
 @Data
-public class AddBookResponse {
+public class AddBookResponseDTO {
     private Integer userBookId;
     private BookStatus status;
     private Integer ownerId;
@@ -17,7 +17,7 @@ public class AddBookResponse {
     private String publisher;
     private String imageLink;
 
-    public AddBookResponse(UserBook userBook) {
+    public AddBookResponseDTO(UserBook userBook) {
         this.userBookId = userBook.getId();
         this.status = userBook.getStatus();
         this.ownerId = userBook.getOwner().getId();

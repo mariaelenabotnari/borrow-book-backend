@@ -14,12 +14,15 @@ import org.borrowbook.borrowbookbackend.repository.BorrowRequestRepository;
 import org.borrowbook.borrowbookbackend.repository.UserBookRepository;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -71,7 +74,7 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
-    public AddBookResponse addBookToUser(String googleBookId, BookStatus status, User user) {
+    public AddBookResponseDTO addBookToUser(String googleBookId, BookStatus status, User user) {
         Optional<Book> existingBook = bookRepository.findByGoogleBookId(googleBookId);
         Book book;
 
@@ -83,7 +86,30 @@ public class BookService {
             book = bookRepository.save(book);
         }
         UserBook userBook = new UserBook(status, user, book);
-        return new AddBookResponse(userBookRepository.save(userBook));
+        return new AddBookResponseDTO(userBookRepository.save(userBook));
+    }
+
+    public PaginatedResultDTO<CollectionBookDTO> searchBooksByTitle(String title, PaginatedRequestDTO request) {
+        Pageable pageable = PageRequest.of(
+                request.getPageIndex() - 1,
+                request.getPageSize(),
+                Sort.by("book.title").ascending()
+        );
+
+        Page<UserBook> userBooksPage = userBookRepository
+                .findByBookTitleContainingIgnoreCaseAndStatus(title, BookStatus.AVAILABLE, pageable);
+
+        List<CollectionBookDTO> items = userBooksPage.getContent()
+                .stream()
+                .map(CollectionBookDTO::new)
+                .collect(Collectors.toList());
+
+        return new PaginatedResultDTO<>(
+                request.getPageIndex(),
+                request.getPageSize(),
+                userBooksPage.getTotalElements(),
+                items
+        );
     }
 
     private GoogleBookDTO fetchBookFromGoogleApi(String googleBookId) {

@@ -3,6 +3,7 @@ package org.borrowbook.borrowbookbackend.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.borrowbook.borrowbookbackend.config.properties.CookieProperties;
 import org.borrowbook.borrowbookbackend.exception.NotFoundException;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;

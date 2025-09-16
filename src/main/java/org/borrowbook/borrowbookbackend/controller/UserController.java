@@ -1,14 +1,11 @@
 package org.borrowbook.borrowbookbackend.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.borrowbook.borrowbookbackend.model.dto.BorrowedBookDTO;
-import org.borrowbook.borrowbookbackend.model.dto.CollectionBookDTO;
-import org.borrowbook.borrowbookbackend.model.dto.UserDTO;
+import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.service.BookService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,7 +15,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController{
     private final BookService bookService;
-
 
     @GetMapping("/me")
     public UserDTO me(@AuthenticationPrincipal User user){
@@ -44,4 +40,11 @@ public class UserController{
         bookService.deleteBook(username, userBookId);
     }
 
+    @GetMapping("/search")
+    public PaginatedResultDTO<CollectionBookDTO> searchBooksByTitle(
+            @RequestParam String title,
+            PaginatedRequestDTO request) {
+
+        return bookService.searchBooksByTitle(title, request);
+    }
 }

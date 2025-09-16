@@ -4,10 +4,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.borrowbook.borrowbookbackend.model.dto.AuthenticationRequest;
-import org.borrowbook.borrowbookbackend.model.dto.RegisterRequest;
-import org.borrowbook.borrowbookbackend.model.dto.SessionResponse;
-import org.borrowbook.borrowbookbackend.model.dto.VerifyCodeRequest;
+import org.borrowbook.borrowbookbackend.model.dto.AuthenticationRequestDTO;
+import org.borrowbook.borrowbookbackend.model.dto.RegisterRequestDTO;
+import org.borrowbook.borrowbookbackend.model.dto.SessionResponseDTO;
+import org.borrowbook.borrowbookbackend.model.dto.VerifyCodeRequestDTO;
 import org.borrowbook.borrowbookbackend.service.AuthenticationService;
 import org.borrowbook.borrowbookbackend.service.RefreshTokenService;
 import org.springframework.http.HttpStatus;
@@ -25,17 +25,17 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public SessionResponse register(@Valid @RequestBody RegisterRequest request) {
+    public SessionResponseDTO register(@Valid @RequestBody RegisterRequestDTO request) {
         return service.registerAndSendCode(request);
     }
 
     @PostMapping("/login")
-    public SessionResponse login(@Valid @RequestBody AuthenticationRequest request, HttpServletResponse response) {
+    public SessionResponseDTO login(@Valid @RequestBody AuthenticationRequestDTO request, HttpServletResponse response) {
         return service.loginAndSendCode(request, response);
     }
 
     @PostMapping("/verify-code")
-    public void verifyCode(@Valid @RequestBody VerifyCodeRequest request, HttpServletResponse response) {
+    public void verifyCode(@Valid @RequestBody VerifyCodeRequestDTO request, HttpServletResponse response) {
          service.verifyCode(request, response);
     }
 

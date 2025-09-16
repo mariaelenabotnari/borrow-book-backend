@@ -5,14 +5,14 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class PaginatedResult<T> {
+public class PaginatedResultDTO<T> {
     private final int pageIndex;
     private final int pageSize;
     private final long totalCount;
     private final int totalPages;
     private final List<T> items;
 
-    public PaginatedResult(int pageIndex, int pageSize, long totalCount, List<T> items) {
+    public PaginatedResultDTO(int pageIndex, int pageSize, long totalCount, List<T> items) {
         this.pageIndex = pageIndex;
         this.pageSize = pageSize;
         this.totalCount = totalCount;

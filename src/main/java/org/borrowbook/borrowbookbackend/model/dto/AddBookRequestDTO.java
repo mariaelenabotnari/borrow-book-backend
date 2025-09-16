@@ -4,7 +4,7 @@ import lombok.Data;
 import org.borrowbook.borrowbookbackend.model.enums.BookStatus;
 
 @Data
-public class AddBookRequest {
+public class AddBookRequestDTO {
     private String googleBookId;
     private BookStatus status;
 }

@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
+public class RegisterRequestDTO {
     @NotBlank(message = "Username is required")
     @Size(min = 5, message = "Username must be of at least 5 characters")
     private String username;
