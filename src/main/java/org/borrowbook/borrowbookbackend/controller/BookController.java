@@ -3,9 +3,9 @@ package org.borrowbook.borrowbookbackend.controller;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.model.entity.User;
+import org.borrowbook.borrowbookbackend.model.entity.UserBook;
 import org.borrowbook.borrowbookbackend.service.BookService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +36,11 @@ public class BookController {
         bookService.deleteBook(username, userBookId);
     }
 
+    @GetMapping("/{username}")
+    public List<UserBooksDTO> getUserBooks(@PathVariable String username) {
+        return bookService.fetchUserBooks(username);
+    }
+
     @GetMapping("/search/google")
     public List<BookSearchDTO> fetchBooksWithGoogle(@RequestParam String q){
         return bookService.fetchBooksWithGoogle(q);
@@ -43,6 +48,6 @@ public class BookController {
 
     @PostMapping
     public AddBookResponse addBook(@RequestBody AddBookRequest request, @AuthenticationPrincipal User user) {
-        return bookService.addBookToUser(request.getGoogleBookId(), request.getStatus(), user)
+        return bookService.addBookToUser(request.getGoogleBookId(), request.getStatus(), user);
     }
 }

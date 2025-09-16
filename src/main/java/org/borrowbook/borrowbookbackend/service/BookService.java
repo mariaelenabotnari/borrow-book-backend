@@ -42,7 +42,7 @@ public class BookService {
     }
 
     public List<BorrowedBookDTO> fetchBorrowedBooks(String username) {
-        List<BorrowRequest> borrowRequests = borrowRequestRepository.findByBorrowerUsernameAndStatus(username, "BORROWED");
+        List<BorrowRequest> borrowRequests = borrowRequestRepository.findByBorrowerUsernameAndUserBookStatus(username, BookStatus.BORROWED);
         return borrowRequests.stream().map(BorrowedBookDTO::new).collect(Collectors.toList());
     }
 
@@ -50,6 +50,24 @@ public class BookService {
         UserBook userBook = userBookRepository.findByIdAndOwner_Username(userBookId, username)
                 .orElseThrow(() -> new EntityNotFoundException("Book not found or not owned by user"));
         userBookRepository.delete(userBook);
+    }
+
+    public List<UserBooksDTO> fetchUserBooks(String username) {
+        List<UserBooksDTO> booksList = new ArrayList<>();
+        List<UserBook> userBooks = userBookRepository.findByOwner_Username(username);
+
+        for (UserBook userBook : userBooks) {
+            if (userBook.getStatus() == BookStatus.AVAILABLE) {
+                Book book = userBook.getBook();
+                UserBooksDTO userBooksDTO = new UserBooksDTO();
+                userBooksDTO.setTitle(book.getTitle());
+                userBooksDTO.setAuthors(book.getAuthor());
+                userBooksDTO.setImageLink(book.getImageLink());
+                userBooksDTO.setStatus(BookStatus.AVAILABLE);
+                booksList.add(userBooksDTO);
+            }
+        }
+        return booksList;
     }
 
     public List<BookSearchDTO> fetchBooksWithGoogle(String query) {
