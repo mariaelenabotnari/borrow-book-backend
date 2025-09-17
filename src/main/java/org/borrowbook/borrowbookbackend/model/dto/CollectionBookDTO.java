@@ -18,7 +18,7 @@ public class CollectionBookDTO {
     private List<String> authors;
     private String imageLink;
     private BookStatus status;
-    private Integer userId;
+    private String username;
 
     public CollectionBookDTO(UserBook userBook) {
         this.userBookId = userBook.getId();
@@ -26,6 +26,6 @@ public class CollectionBookDTO {
         this.authors = userBook.getBook().getAuthor();
         this.imageLink = userBook.getBook().getImageLink();
         this.status = userBook.getStatus();
-        this.userId = userBook.getOwner().getId();
+        this.username = userBook.getOwner().getUsername();
     }
 }
