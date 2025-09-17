@@ -28,6 +28,7 @@ public class BorrowRequest {
     private User borrower;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private BookRequestStatus status;
 
     private LocalDate borrowed_at;
