@@ -23,12 +23,4 @@ public class PaginatedResultDTO<T> {
         this.hasPreviousPage = pageIndex > 1;
         this.items = items;
     }
-
-    public boolean hasNextPage() {
-        return pageIndex < totalPages;
-    }
-
-    public boolean hasPreviousPage() {
-        return pageIndex > 1;
-    }
 }
