@@ -32,7 +32,10 @@ public class BorrowRequest {
     private BookRequestStatus status;
 
     private LocalDate borrowed_at;
+
+    @Column(nullable = false)
     private LocalDate due_date;
+
     private LocalDate returned_at;
 
     @Column(nullable = false, length=150)
@@ -41,5 +44,23 @@ public class BorrowRequest {
     private LocalDate created_at;
     @Column(nullable = false)
     private LocalDateTime meeting_time;
+
+    public BorrowRequest(
+            UserBook userBook,
+            User borrower,
+            BookRequestStatus status,
+            LocalDate createdAt,
+            LocalDateTime meetingTime,
+            LocalDate dueDate,
+            String location
+    ) {
+        this.userBook = userBook;
+        this.borrower = borrower;
+        this.status = status;
+        this.created_at = createdAt;
+        this.meeting_time = meetingTime;
+        this.due_date = dueDate;
+        this.location = location;
+    }
 
 }

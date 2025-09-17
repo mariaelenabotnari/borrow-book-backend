@@ -201,8 +201,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(globalException, status);
     }
 
-    @ExceptionHandler(PendingBorrowRequestExistsException.class)
-    public ResponseEntity<Object> handlePendingBorrowRequestExists(PendingBorrowRequestExistsException ex) {
+    @ExceptionHandler({
+            PendingBorrowRequestExistsException.class,
+            BookIsAlreadyBorrowedException.class,
+            CantBorrowYourOwnBookException.class
+    })
+    public ResponseEntity<Object> handleBorrowRequestExceptions(RuntimeException ex) {
         log.error(ex.getMessage(), ex.getCause());
         HttpStatus status = HttpStatus.BAD_REQUEST;
 
@@ -214,5 +218,17 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(globalException, status);
     }
 
+    @ExceptionHandler(MissingFieldException.class)
+    public ResponseEntity<Object> handleMissingFieldException(MissingFieldException ex) {
+        log.error(ex.getMessage(), ex.getCause());
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        ExceptionResult globalException = new ExceptionResult(
+                ex.getMessage(),
+                status,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(globalException, status);
+    }
 }
 

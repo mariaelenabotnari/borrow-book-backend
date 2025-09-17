@@ -2,12 +2,16 @@ package org.borrowbook.borrowbookbackend.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.borrowbook.borrowbookbackend.exception.BookIsAlreadyBorrowedException;
+import org.borrowbook.borrowbookbackend.exception.CantBorrowYourOwnBookException;
+import org.borrowbook.borrowbookbackend.exception.MissingFieldException;
 import org.borrowbook.borrowbookbackend.exception.PendingBorrowRequestExistsException;
 import org.borrowbook.borrowbookbackend.model.dto.BorrowRequestDTO;
 import org.borrowbook.borrowbookbackend.model.entity.BorrowRequest;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.model.entity.UserBook;
 import org.borrowbook.borrowbookbackend.model.enums.BookRequestStatus;
+import org.borrowbook.borrowbookbackend.model.enums.BookStatus;
 import org.borrowbook.borrowbookbackend.repository.BorrowRequestRepository;
 import org.borrowbook.borrowbookbackend.repository.UserBookRepository;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
@@ -32,7 +36,6 @@ public class BorrowService {
             throw new PendingBorrowRequestExistsException(
                     "You already have a pending borrow request for this book.");
         }
-        BorrowRequest borrowRequest = new BorrowRequest();
 
         User borrower = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
@@ -40,12 +43,35 @@ public class BorrowService {
         UserBook userBook = userBookRepository.findById(Long.valueOf(userBookId))
                 .orElseThrow(() -> new EntityNotFoundException("UserBook not found with id: " + userBookId));
 
-        borrowRequest.setUserBook(userBook);
-        borrowRequest.setBorrower(borrower);
-        borrowRequest.setStatus(BookRequestStatus.PENDING);
-        borrowRequest.setCreated_at(LocalDate.now());
-        borrowRequest.setMeeting_time(borrowRequestDTO.getMeeting_time());
-        borrowRequest.setLocation(borrowRequestDTO.getLocation());
+        if (userBook.getStatus() == BookStatus.BORROWED) {
+            throw new BookIsAlreadyBorrowedException("This book is already borrowed by another user.");
+        }
+
+        if (userBook.getOwner().getId().equals(borrower.getId())) {
+            throw new CantBorrowYourOwnBookException("You cannot borrow your own book.");
+        }
+
+        if (borrowRequestDTO.getMeeting_time() == null) {
+            throw new MissingFieldException("Meeting time is required for a borrow request.");
+        }
+
+        if (borrowRequestDTO.getDue_date() == null) {
+            throw new MissingFieldException("Due date is required for a borrow request.");
+        }
+
+        if (borrowRequestDTO.getLocation() == null || borrowRequestDTO.getLocation().trim().isEmpty()) {
+            throw new MissingFieldException("Location is required for a borrow request.");
+        }
+
+        BorrowRequest borrowRequest = new BorrowRequest(
+                userBook,
+                borrower,
+                BookRequestStatus.PENDING,
+                LocalDate.now(),
+                borrowRequestDTO.getMeeting_time(),
+                borrowRequestDTO.getDue_date(),
+                borrowRequestDTO.getLocation()
+        );
         borrowRequestRepository.save(borrowRequest);
     }
 }

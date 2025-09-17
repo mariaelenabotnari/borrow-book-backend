@@ -61,15 +61,11 @@ public class BookService {
         for (UserBook userBook : userBooks) {
             if (userBook.getStatus() == BookStatus.AVAILABLE) {
                 Book book = userBook.getBook();
-                UserBooksDTO userBooksDTO = new UserBooksDTO();
-                userBooksDTO.setUserBookId(userBook.getId());
-                userBooksDTO.setTitle(book.getTitle());
-                userBooksDTO.setAuthors(book.getAuthor());
-                userBooksDTO.setImageLink(book.getImageLink());
-                userBooksDTO.setStatus(BookStatus.AVAILABLE);
+                UserBooksDTO userBooksDTO = new UserBooksDTO(userBook, book);
                 booksList.add(userBooksDTO);
             }
         }
+
         return booksList;
     }
 

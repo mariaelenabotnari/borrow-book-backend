@@ -9,5 +9,6 @@ import java.time.LocalDate;
 @Data
 public class BorrowRequestDTO {
     private LocalDateTime meeting_time;
+    private LocalDate due_date;
     private String location;
 }
