@@ -20,26 +20,34 @@ public class BorrowRequest {
     Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="user_book_id", nullable=false)
+    @JoinColumn(name="userBookId", nullable=false)
     private UserBook userBook;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="borrower_id", nullable=false)
+    @JoinColumn(name="borrowerId", nullable=false)
     private User borrower;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private BookRequestStatus status;
 
-    private LocalDate borrowed_at;
-    private LocalDate due_date;
-    private LocalDate returned_at;
+    private LocalDate borrowedAt;
+    private LocalDate dueDate;
+    private LocalDate returnedAt;
 
     @Column(nullable = false, length=150)
     private String location;
     @Column(nullable = false)
-    private LocalDate created_at;
+    private LocalDate createdAt;
     @Column(nullable = false)
-    private LocalDateTime meeting_time;
+    private LocalDateTime meetingTime;
 
+    public BorrowRequest(UserBook userBook, User borrower, String location, LocalDateTime meetingTime) {
+        this.userBook = userBook;
+        this.borrower = borrower;
+        this.location = location;
+        this.meetingTime = meetingTime;
+        this.status = BookRequestStatus.PENDING;
+        this.createdAt = LocalDate.now();
+    }
 }

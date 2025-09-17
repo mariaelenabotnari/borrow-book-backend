@@ -21,31 +21,28 @@ import java.util.Optional;
 public class BorrowService {
     private final BorrowRequestRepository borrowRequestRepository;
     private final UserBookRepository userBookRepository;
-    private final UserRepository userRepository;
 
-    public void saveBorrowRequest(String username, BorrowRequestDTO borrowRequestDTO, Integer userBookId) {
+    public void saveBorrowRequest(User user, BorrowRequestDTO borrowRequestDTO, Integer userBookId) {
+        String username = user.getUsername();
+
         Optional<BorrowRequest> existingRequest = borrowRequestRepository
-                .findByBorrower_UsernameAndUserBook_IdAndStatus(
+                .findByBorrowerUsernameAndUserBookIdAndStatus(
                         username, userBookId, BookRequestStatus.PENDING);
 
-        if (existingRequest.isPresent()) {
+        if (existingRequest.isPresent())
             throw new PendingBorrowRequestExistsException(
                     "You already have a pending borrow request for this book.");
-        }
-        BorrowRequest borrowRequest = new BorrowRequest();
-
-        User borrower = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
 
         UserBook userBook = userBookRepository.findById(Long.valueOf(userBookId))
                 .orElseThrow(() -> new EntityNotFoundException("UserBook not found with id: " + userBookId));
 
-        borrowRequest.setUserBook(userBook);
-        borrowRequest.setBorrower(borrower);
-        borrowRequest.setStatus(BookRequestStatus.PENDING);
-        borrowRequest.setCreated_at(LocalDate.now());
-        borrowRequest.setMeeting_time(borrowRequestDTO.getMeeting_time());
-        borrowRequest.setLocation(borrowRequestDTO.getLocation());
+        BorrowRequest borrowRequest = new BorrowRequest(
+                userBook,
+                user,
+                borrowRequestDTO.getLocation(),
+                borrowRequestDTO.getMeetingTime()
+        );
+
         borrowRequestRepository.save(borrowRequest);
     }
 }

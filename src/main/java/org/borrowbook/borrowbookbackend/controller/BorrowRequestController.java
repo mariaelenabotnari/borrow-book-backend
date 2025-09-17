@@ -19,8 +19,11 @@ public class BorrowRequestController {
 
     @PostMapping("/request/{userBookId}")
     @ResponseStatus(HttpStatus.CREATED)
-    public void handleBorrowRequest(@AuthenticationPrincipal User authPrincipal, @Valid @RequestBody BorrowRequestDTO borrowRequestDTO, @PathVariable int userBookId) {
-        String username = authPrincipal.getUsername();
-        borrowService.saveBorrowRequest(username, borrowRequestDTO, userBookId);
+    public void handleBorrowRequest(
+            @AuthenticationPrincipal User authPrincipal,
+            @Valid @RequestBody BorrowRequestDTO borrowRequestDTO,
+            @PathVariable int userBookId)
+    {
+        borrowService.saveBorrowRequest(authPrincipal, borrowRequestDTO, userBookId);
     }
 }

@@ -9,8 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BorrowRequestRepository extends JpaRepository<BorrowRequest, Long> {
-    List<BorrowRequest> findByBorrowerUsernameAndUserBookStatus(String borrower_username, BookStatus bookStatus);
-    BorrowRequest findByBorrowerUsername(String username);
-    Optional<BorrowRequest> findByBorrower_UsernameAndUserBook_IdAndStatus(String username, Integer userBookId, BookRequestStatus status);
+    List<BorrowRequest> findByBorrowerUsernameAndUserBookStatus(String borrowerUsername, BookStatus bookStatus);
+    Optional<BorrowRequest> findByBorrowerUsernameAndUserBookIdAndStatus(String username, Integer userBookId, BookRequestStatus status);
 }
 
