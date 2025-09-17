@@ -201,6 +201,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(globalException, status);
     }
 
+    @ExceptionHandler(PendingBorrowRequestExistsException.class)
+    public ResponseEntity<Object> handlePendingBorrowRequestExists(PendingBorrowRequestExistsException ex) {
+        log.error(ex.getMessage(), ex.getCause());
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        ExceptionResult globalException = new ExceptionResult(
+                ex.getMessage(),
+                status,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(globalException, status);
+    }
 
 }
 

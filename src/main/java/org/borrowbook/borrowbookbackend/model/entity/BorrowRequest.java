@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.borrowbook.borrowbookbackend.model.enums.BookRequestStatus;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -26,10 +28,17 @@ public class BorrowRequest {
     private User borrower;
 
     @Column(nullable = false)
-    String status;
+    private BookRequestStatus status;
 
-    LocalDate borrowed_at;
-    LocalDate due_date;
-    LocalDate returned_at;
+    private LocalDate borrowed_at;
+    private LocalDate due_date;
+    private LocalDate returned_at;
+
+    @Column(nullable = false, length=150)
+    private String location;
+    @Column(nullable = false)
+    private LocalDate created_at;
+    @Column(nullable = false)
+    private LocalDateTime meeting_time;
 
 }

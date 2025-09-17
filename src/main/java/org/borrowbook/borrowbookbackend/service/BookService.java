@@ -52,6 +52,9 @@ public class BookService {
     }
 
     public List<UserBooksDTO> fetchUserBooks(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
+
         List<UserBooksDTO> booksList = new ArrayList<>();
         List<UserBook> userBooks = userBookRepository.findByOwner_Username(username);
 
@@ -59,6 +62,7 @@ public class BookService {
             if (userBook.getStatus() == BookStatus.AVAILABLE) {
                 Book book = userBook.getBook();
                 UserBooksDTO userBooksDTO = new UserBooksDTO();
+                userBooksDTO.setUserBookId(userBook.getId());
                 userBooksDTO.setTitle(book.getTitle());
                 userBooksDTO.setAuthors(book.getAuthor());
                 userBooksDTO.setImageLink(book.getImageLink());
