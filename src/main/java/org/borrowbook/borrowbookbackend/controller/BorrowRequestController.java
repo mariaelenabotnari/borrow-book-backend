@@ -24,6 +24,7 @@ public class BorrowRequestController {
             @Valid @RequestBody BorrowRequestDTO borrowRequestDTO,
             @PathVariable int userBookId)
     {
-        borrowService.saveBorrowRequest(authPrincipal, borrowRequestDTO, userBookId);
+        String username = authPrincipal.getUsername();
+        borrowService.saveBorrowRequest(username, borrowRequestDTO, userBookId);
     }
 }
