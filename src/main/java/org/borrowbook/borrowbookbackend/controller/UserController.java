@@ -48,9 +48,10 @@ public class UserController{
 
     @GetMapping("/search")
     public PaginatedResultDTO<CollectionBookDTO> searchBooksByTitle(
+            @AuthenticationPrincipal  User authPrincipal,
             @RequestParam String title,
             PaginatedRequestDTO request) {
 
-        return bookService.searchBooksByTitle(title, request);
+        return bookService.searchBooksByTitle(title, request, authPrincipal.getUsername());
     }
 }

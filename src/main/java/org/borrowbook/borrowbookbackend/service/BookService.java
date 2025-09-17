@@ -112,7 +112,11 @@ public class BookService {
         return new AddBookResponseDTO(userBookRepository.save(userBook));
     }
 
-    public PaginatedResultDTO<CollectionBookDTO> searchBooksByTitle(String title, PaginatedRequestDTO request) {
+    public PaginatedResultDTO<CollectionBookDTO> searchBooksByTitle(
+            String title,
+            PaginatedRequestDTO request,
+            String username)
+    {
         Pageable pageable = PageRequest.of(
                 request.getPageIndex() - 1,
                 request.getPageSize(),
@@ -120,7 +124,11 @@ public class BookService {
         );
 
         Page<UserBook> userBooksPage = userBookRepository
-                .findByBookTitleContainingIgnoreCaseAndStatus(title, BookStatus.AVAILABLE, pageable);
+                .findByBookTitleContainingIgnoreCaseAndStatusAndOwnerUsernameNot(
+                        title,
+                        BookStatus.AVAILABLE,
+                        username,
+                        pageable);
 
         List<CollectionBookDTO> items = userBooksPage.getContent()
                 .stream()
