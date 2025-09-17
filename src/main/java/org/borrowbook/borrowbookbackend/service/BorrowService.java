@@ -37,7 +37,7 @@ public class BorrowService {
         User borrower = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
 
-        UserBook userBook = userBookRepository.findById(userBookId)
+        UserBook userBook = userBookRepository.findById(Long.valueOf(userBookId))
                 .orElseThrow(() -> new EntityNotFoundException("UserBook not found with id: " + userBookId));
 
         borrowRequest.setUserBook(userBook);
