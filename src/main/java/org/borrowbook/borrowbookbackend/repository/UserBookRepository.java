@@ -13,5 +13,6 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
     List<UserBook> findByOwner_Username(String username);
     Optional<UserBook> findByIdAndOwner_Username(Integer id, String username);
 
-    Page<UserBook> findByBookTitleContainingIgnoreCaseAndStatus(String title, BookStatus status, Pageable pageable);
+    Page<UserBook> findByBookTitleContainingIgnoreCaseAndStatusAndOwnerUsernameNot(
+            String title, BookStatus status, String username, Pageable pageable);
 }
