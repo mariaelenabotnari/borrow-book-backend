@@ -8,6 +8,7 @@ import org.borrowbook.borrowbookbackend.exception.MissingFieldException;
 import org.borrowbook.borrowbookbackend.exception.PendingBorrowRequestExistsException;
 import org.borrowbook.borrowbookbackend.model.dto.BorrowRequestDTO;
 import org.borrowbook.borrowbookbackend.model.dto.BorrowRequestResponseDTO;
+import org.borrowbook.borrowbookbackend.model.dto.PaginatedResultDTO;
 import org.borrowbook.borrowbookbackend.model.entity.BorrowRequest;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.model.entity.UserBook;
@@ -15,10 +16,15 @@ import org.borrowbook.borrowbookbackend.model.enums.BookRequestStatus;
 import org.borrowbook.borrowbookbackend.model.enums.BookStatus;
 import org.borrowbook.borrowbookbackend.repository.BorrowRequestRepository;
 import org.borrowbook.borrowbookbackend.repository.UserBookRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -67,7 +73,7 @@ public class BorrowService {
                 userBook,
                 user,
                 BookRequestStatus.PENDING,
-                LocalDate.now(),
+                LocalDateTime.now(),
                 borrowRequestDTO.getMeetingTime(),
                 borrowRequestDTO.getDueDate(),
                 borrowRequestDTO.getLocation()
@@ -109,12 +115,12 @@ public class BorrowService {
                 .orElseThrow(() -> new EntityNotFoundException("Borrow request not found or you're not the owner"));
     }
 
-    public List<BorrowRequestResponseDTO> getIncomingRequests(User owner) {
-        List<BorrowRequest> requests = borrowRequestRepository
-                .findByUserBookOwnerUsernameAndStatus(owner.getUsername(), BookRequestStatus.PENDING);
-        return requests.stream()
-                .map(BorrowRequestResponseDTO::new)
-                .collect(Collectors.toList());
+    public PaginatedResultDTO<BorrowRequestResponseDTO> getIncomingRequests(User owner, Integer size, Integer page) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<BorrowRequestResponseDTO> incomingPage = borrowRequestRepository
+                .findByUserBookOwnerUsernameAndStatus(owner.getUsername(), BookRequestStatus.PENDING, pageable)
+                .map(BorrowRequestResponseDTO::new);;
+        return new PaginatedResultDTO<>(incomingPage);
     }
 
     public List<BorrowRequestResponseDTO> getOutgoingRequests(User borrower) {

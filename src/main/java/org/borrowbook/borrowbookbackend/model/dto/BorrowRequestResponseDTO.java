@@ -21,7 +21,7 @@ public class BorrowRequestResponseDTO {
     private String location;
     private LocalDateTime meetingTime;
     private LocalDate dueDate;
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
     public BorrowRequestResponseDTO(BorrowRequest borrowRequest) {
         this.id = borrowRequest.getId();

@@ -1,6 +1,7 @@
 package org.borrowbook.borrowbookbackend.model.dto;
 
 import lombok.Data;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -22,5 +23,15 @@ public class PaginatedResultDTO<T> {
         this.hasNextPage = pageIndex < totalPages;
         this.hasPreviousPage = pageIndex > 1;
         this.items = items;
+    }
+
+    public PaginatedResultDTO(Page<T> page) {
+        this.pageIndex = page.getNumber() + 1;
+        this.pageSize = page.getSize();
+        this.totalCount = page.getTotalElements();
+        this.totalPages = page.getTotalPages();
+        this.hasNextPage = page.hasNext();
+        this.hasPreviousPage = page.hasPrevious();
+        this.items = page.getContent();
     }
 }
