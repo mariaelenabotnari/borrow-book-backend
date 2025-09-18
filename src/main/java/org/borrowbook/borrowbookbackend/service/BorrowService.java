@@ -7,6 +7,7 @@ import org.borrowbook.borrowbookbackend.exception.CantBorrowYourOwnBookException
 import org.borrowbook.borrowbookbackend.exception.MissingFieldException;
 import org.borrowbook.borrowbookbackend.exception.PendingBorrowRequestExistsException;
 import org.borrowbook.borrowbookbackend.model.dto.BorrowRequestDTO;
+import org.borrowbook.borrowbookbackend.model.dto.BorrowRequestResponseDTO;
 import org.borrowbook.borrowbookbackend.model.entity.BorrowRequest;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.model.entity.UserBook;
@@ -14,11 +15,13 @@ import org.borrowbook.borrowbookbackend.model.enums.BookRequestStatus;
 import org.borrowbook.borrowbookbackend.model.enums.BookStatus;
 import org.borrowbook.borrowbookbackend.repository.BorrowRequestRepository;
 import org.borrowbook.borrowbookbackend.repository.UserBookRepository;
-import org.borrowbook.borrowbookbackend.repository.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -29,7 +32,7 @@ public class BorrowService {
     public void saveBorrowRequest(User user, BorrowRequestDTO borrowRequestDTO, Integer userBookId) {
         String username =  user.getUsername();
         Optional<BorrowRequest> existingRequest = borrowRequestRepository
-                .findByBorrower_UsernameAndUserBook_IdAndStatus(
+                .findByBorrowerUsernameAndUserBookIdAndStatus(
                         username, userBookId, BookRequestStatus.PENDING);
 
         if (existingRequest.isPresent()) {
@@ -48,11 +51,11 @@ public class BorrowService {
             throw new CantBorrowYourOwnBookException("You cannot borrow your own book.");
         }
 
-        if (borrowRequestDTO.getMeeting_time() == null) {
+        if (borrowRequestDTO.getMeetingTime() == null) {
             throw new MissingFieldException("Meeting time is required for a borrow request.");
         }
 
-        if (borrowRequestDTO.getDue_date() == null) {
+        if (borrowRequestDTO.getDueDate() == null) {
             throw new MissingFieldException("Due date is required for a borrow request.");
         }
 
@@ -65,10 +68,60 @@ public class BorrowService {
                 user,
                 BookRequestStatus.PENDING,
                 LocalDate.now(),
-                borrowRequestDTO.getMeeting_time(),
-                borrowRequestDTO.getDue_date(),
+                borrowRequestDTO.getMeetingTime(),
+                borrowRequestDTO.getDueDate(),
                 borrowRequestDTO.getLocation()
         );
         borrowRequestRepository.save(borrowRequest);
+    }
+
+    @Transactional
+    public void acceptBorrowRequest(User owner, Integer borrowRequestId) {
+        BorrowRequest borrowRequest = getBorrowRequestForOwner(owner, borrowRequestId);
+
+        borrowRequest.setStatus(BookRequestStatus.ACCEPTED);
+        borrowRequest.setBorrowedAt(LocalDate.now());
+
+        UserBook userBook = borrowRequest.getUserBook();
+        userBook.setStatus(BookStatus.BORROWED);
+        userBookRepository.save(userBook);
+
+        List<BorrowRequest> otherPendingRequests = borrowRequestRepository
+                .findByUserBookIdAndStatusAndIdNot(userBook.getId(), BookRequestStatus.PENDING, borrowRequestId);
+
+        for (BorrowRequest otherRequest : otherPendingRequests) {
+            otherRequest.setStatus(BookRequestStatus.REJECTED);
+        }
+        borrowRequestRepository.saveAll(otherPendingRequests);
+
+        borrowRequestRepository.save(borrowRequest);
+    }
+
+    @Transactional
+    public void rejectBorrowRequest(User owner, Integer borrowRequestId) {
+        BorrowRequest borrowRequest = getBorrowRequestForOwner(owner, borrowRequestId);
+        borrowRequest.setStatus(BookRequestStatus.REJECTED);
+        borrowRequestRepository.save(borrowRequest);
+    }
+
+    private BorrowRequest getBorrowRequestForOwner(User owner, Integer borrowRequestId) {
+        return borrowRequestRepository.findByIdAndUserBookOwnerUsername(borrowRequestId, owner.getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("Borrow request not found or you're not the owner"));
+    }
+
+    public List<BorrowRequestResponseDTO> getIncomingRequests(User owner) {
+        List<BorrowRequest> requests = borrowRequestRepository
+                .findByUserBookOwnerUsernameAndStatus(owner.getUsername(), BookRequestStatus.PENDING);
+        return requests.stream()
+                .map(BorrowRequestResponseDTO::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<BorrowRequestResponseDTO> getOutgoingRequests(User borrower) {
+        List<BorrowRequest> requests = borrowRequestRepository
+                .findByBorrowerUsernameAndStatus(borrower.getUsername(), BookRequestStatus.PENDING);
+        return requests.stream()
+                .map(BorrowRequestResponseDTO::new)
+                .collect(Collectors.toList());
     }
 }

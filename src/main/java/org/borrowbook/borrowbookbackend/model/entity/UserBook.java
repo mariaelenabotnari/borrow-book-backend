@@ -14,7 +14,7 @@ import org.borrowbook.borrowbookbackend.model.enums.BookStatus;
 public class UserBook {
     @Id
     @GeneratedValue
-    Integer id;
+    private Integer id;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

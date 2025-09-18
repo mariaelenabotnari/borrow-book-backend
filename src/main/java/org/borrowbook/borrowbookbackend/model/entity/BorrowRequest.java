@@ -17,33 +17,33 @@ import java.time.LocalDateTime;
 public class BorrowRequest {
     @Id
     @GeneratedValue
-    Integer id;
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="user_book_id", nullable=false)
+    @JoinColumn(name="userBookId", nullable=false)
     private UserBook userBook;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="borrower_id", nullable=false)
+    @JoinColumn(name="borrowerId", nullable=false)
     private User borrower;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private BookRequestStatus status;
 
-    private LocalDate borrowed_at;
+    private LocalDate borrowedAt;
 
     @Column(nullable = false)
-    private LocalDate due_date;
+    private LocalDate dueDate;
 
-    private LocalDate returned_at;
+    private LocalDate returnedAt;
 
     @Column(nullable = false, length=150)
     private String location;
     @Column(nullable = false)
-    private LocalDate created_at;
+    private LocalDate createdAt;
     @Column(nullable = false)
-    private LocalDateTime meeting_time;
+    private LocalDateTime meetingTime;
 
     public BorrowRequest(
             UserBook userBook,
@@ -57,9 +57,9 @@ public class BorrowRequest {
         this.userBook = userBook;
         this.borrower = borrower;
         this.status = status;
-        this.created_at = createdAt;
-        this.meeting_time = meetingTime;
-        this.due_date = dueDate;
+        this.createdAt = createdAt;
+        this.meetingTime = meetingTime;
+        this.dueDate = dueDate;
         this.location = location;
     }
 
