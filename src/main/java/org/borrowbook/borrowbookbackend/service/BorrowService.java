@@ -25,9 +25,9 @@ import java.util.Optional;
 public class BorrowService {
     private final BorrowRequestRepository borrowRequestRepository;
     private final UserBookRepository userBookRepository;
-    private final UserRepository userRepository;
 
-    public void saveBorrowRequest(String username, BorrowRequestDTO borrowRequestDTO, Integer userBookId) {
+    public void saveBorrowRequest(User user, BorrowRequestDTO borrowRequestDTO, Integer userBookId) {
+        String username =  user.getUsername();
         Optional<BorrowRequest> existingRequest = borrowRequestRepository
                 .findByBorrower_UsernameAndUserBook_IdAndStatus(
                         username, userBookId, BookRequestStatus.PENDING);
@@ -37,9 +37,6 @@ public class BorrowService {
                     "You already have a pending borrow request for this book.");
         }
 
-        User borrower = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
-
         UserBook userBook = userBookRepository.findById(Long.valueOf(userBookId))
                 .orElseThrow(() -> new EntityNotFoundException("UserBook not found with id: " + userBookId));
 
@@ -47,7 +44,7 @@ public class BorrowService {
             throw new BookIsAlreadyBorrowedException("This book is already borrowed by another user.");
         }
 
-        if (userBook.getOwner().getId().equals(borrower.getId())) {
+        if (userBook.getOwner().getId().equals(user.getId())) {
             throw new CantBorrowYourOwnBookException("You cannot borrow your own book.");
         }
 
@@ -65,7 +62,7 @@ public class BorrowService {
 
         BorrowRequest borrowRequest = new BorrowRequest(
                 userBook,
-                borrower,
+                user,
                 BookRequestStatus.PENDING,
                 LocalDate.now(),
                 borrowRequestDTO.getMeeting_time(),
