@@ -57,18 +57,6 @@ public class BorrowService {
             throw new CantBorrowYourOwnBookException("You cannot borrow your own book.");
         }
 
-        if (borrowRequestDTO.getMeetingTime() == null) {
-            throw new MissingFieldException("Meeting time is required for a borrow request.");
-        }
-
-        if (borrowRequestDTO.getDueDate() == null) {
-            throw new MissingFieldException("Due date is required for a borrow request.");
-        }
-
-        if (borrowRequestDTO.getLocation() == null || borrowRequestDTO.getLocation().trim().isEmpty()) {
-            throw new MissingFieldException("Location is required for a borrow request.");
-        }
-
         BorrowRequest borrowRequest = new BorrowRequest(
                 userBook,
                 user,
