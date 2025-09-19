@@ -19,6 +19,7 @@ public class CollectionBookDTO {
     private String imageLink;
     private BookStatus status;
     private String username;
+    private boolean isPending;
 
     public CollectionBookDTO(UserBook userBook) {
         this.userBookId = userBook.getId();
@@ -27,5 +28,16 @@ public class CollectionBookDTO {
         this.imageLink = userBook.getBook().getImageLink();
         this.status = userBook.getStatus();
         this.username = userBook.getOwner().getUsername();
+        this.isPending = false;
+    }
+
+    public CollectionBookDTO(UserBook userBook, boolean isPending) {
+        this.userBookId = userBook.getId();
+        this.title = userBook.getBook().getTitle();
+        this.authors = userBook.getBook().getAuthor();
+        this.imageLink = userBook.getBook().getImageLink();
+        this.status = userBook.getStatus();
+        this.username = userBook.getOwner().getUsername();
+        this.isPending = isPending;
     }
 }

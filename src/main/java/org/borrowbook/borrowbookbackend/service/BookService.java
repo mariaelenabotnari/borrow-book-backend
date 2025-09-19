@@ -8,6 +8,7 @@ import org.borrowbook.borrowbookbackend.model.entity.Book;
 import org.borrowbook.borrowbookbackend.model.entity.BorrowRequest;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.model.entity.UserBook;
+import org.borrowbook.borrowbookbackend.model.enums.BookRequestStatus;
 import org.borrowbook.borrowbookbackend.model.enums.BookStatus;
 import org.borrowbook.borrowbookbackend.repository.BookRepository;
 import org.borrowbook.borrowbookbackend.repository.BorrowRequestRepository;
@@ -51,21 +52,24 @@ public class BookService {
         return borrowRequests.stream().map(BorrowedBookDTO::new).collect(Collectors.toList());
     }
 
-    public List<UserBooksDTO> fetchUserBooks(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
+    public List<UserBooksDTO> fetchUserBooks(String requestingUsername, String targetUsername) {
+        User user = userRepository.findByUsername(targetUsername)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + targetUsername));
 
         List<UserBooksDTO> booksList = new ArrayList<>();
-        List<UserBook> userBooks = userBookRepository.findByOwner_Username(username);
+        List<UserBook> userBooks = userBookRepository.findByOwner_Username(targetUsername);
 
         for (UserBook userBook : userBooks) {
             if (userBook.getStatus() == BookStatus.AVAILABLE) {
                 Book book = userBook.getBook();
-                UserBooksDTO userBooksDTO = new UserBooksDTO(userBook, book);
+                boolean isPending = borrowRequestRepository
+                        .findByBorrowerUsernameAndUserBookIdAndStatus(
+                                requestingUsername, userBook.getId(), BookRequestStatus.PENDING)
+                        .isPresent();
+                UserBooksDTO userBooksDTO = new UserBooksDTO(userBook, book, isPending);
                 booksList.add(userBooksDTO);
             }
         }
-
         return booksList;
     }
 
@@ -128,7 +132,13 @@ public class BookService {
 
         List<CollectionBookDTO> items = userBooksPage.getContent()
                 .stream()
-                .map(CollectionBookDTO::new)
+                .map(userBook -> {
+                    boolean isPending = borrowRequestRepository
+                            .findByBorrowerUsernameAndUserBookIdAndStatus(
+                                    username, userBook.getId(), BookRequestStatus.PENDING)
+                            .isPresent();
+                    return new CollectionBookDTO(userBook, isPending);
+                })
                 .collect(Collectors.toList());
 
         return new PaginatedResultDTO<>(

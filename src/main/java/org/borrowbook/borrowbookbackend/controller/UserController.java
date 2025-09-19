@@ -23,8 +23,8 @@ public class UserController{
 
 
     @GetMapping("/books/{username}")
-    public List<UserBooksDTO> getUserBooks(@PathVariable String username) {
-        return bookService.fetchUserBooks(username);
+    public List<UserBooksDTO> getUserBooks(@AuthenticationPrincipal User authPrincipal, @PathVariable String username) {
+        return bookService.fetchUserBooks(authPrincipal.getUsername(), username);
     }
 
     @GetMapping("/books")

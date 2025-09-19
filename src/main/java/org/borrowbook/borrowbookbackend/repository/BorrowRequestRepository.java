@@ -12,21 +12,10 @@ import java.util.Optional;
 
 public interface BorrowRequestRepository extends JpaRepository<BorrowRequest, Long> {
     List<BorrowRequest> findByBorrowerUsernameAndUserBookStatus(String borrowerUsername, BookStatus bookStatus);
-
-    Optional<BorrowRequest> findByBorrowerUsernameAndUserBookIdAndStatus(
-            String username, Integer userBookId, BookRequestStatus status
-    );
-
+    Optional<BorrowRequest> findByBorrowerUsernameAndUserBookIdAndStatus(String username, Integer userBookId, BookRequestStatus status);
     Optional<BorrowRequest> findByIdAndUserBookOwnerUsername(Integer id, String ownerUsername);
-
-    List<BorrowRequest> findByUserBookIdAndStatusAndIdNot(
-            Integer userBookId, BookRequestStatus status, Integer excludeRequestId
-    );
-
-    List<BorrowRequest> findByUserBookOwnerUsernameAndStatus(String ownerUsername, BookRequestStatus status);
-
+    List<BorrowRequest> findByUserBookIdAndStatusAndIdNot(Integer userBookId, BookRequestStatus status, Integer excludeRequestId);
     Page<BorrowRequest> findByUserBookOwnerUsernameAndStatus(String ownerUsername, BookRequestStatus status, Pageable pageable);
-
     List<BorrowRequest> findByBorrowerUsernameAndStatus(String borrowerUsername, BookRequestStatus status);
 }
 
