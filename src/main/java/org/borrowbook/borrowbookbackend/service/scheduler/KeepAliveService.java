@@ -21,7 +21,6 @@ public class KeepAliveService {
     public void keepAlive() {
         try {
             restTemplate.getForObject(baseUrl + "/api/v1/auth/get", Void.class);
-            log.info("Keep-alive ping to /get successful");
         } catch (Exception e) {
             log.warn("Keep-alive ping to /get failed: {}", e.getMessage());
         }
