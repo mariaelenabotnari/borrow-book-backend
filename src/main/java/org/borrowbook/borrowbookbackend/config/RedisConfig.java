@@ -25,6 +25,7 @@ public class RedisConfig {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(redisProperties.getCache().getHost());
         config.setPort(redisProperties.getCache().getPort());
+        config.setUsername(redisProperties.getCache().getUsername());
         config.setPassword(redisProperties.getCache().getPassword());
         return new LettuceConnectionFactory(config);
     }
@@ -34,6 +35,7 @@ public class RedisConfig {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(redisProperties.getPersistence().getHost());
         config.setPort(redisProperties.getPersistence().getPort());
+        config.setUsername(redisProperties.getPersistence().getUsername());
         config.setPassword(redisProperties.getPersistence().getPassword());
         return new LettuceConnectionFactory(config);
     }

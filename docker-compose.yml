@@ -11,13 +11,19 @@ services:
       - "5432:5432"
     volumes:
       - book_data:/var/lib/postgresql/data
+
   redis-cache:
     image: redis:7.2.4
     container_name: borrow_book_redis_cache
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: [ "redis-server", "--requirepass", "myStrongCacheRedisPass" ]
+    command: [
+      "redis-server",
+      "--requirepass", "myStrongCacheRedisPass",
+      "--user", "default", "on", ">myStrongCacheRedisPass", "~*", "&*"
+    ]
+
 
   redis-persistence:
     image: redis:7.2.4
@@ -25,7 +31,13 @@ services:
     restart: unless-stopped
     ports:
       - "6380:6379"
-    command: ["redis-server", "--requirepass", "myStrongPersistenceRedisPass", "--save", "900", "1", "--appendonly", "yes"]
+    command: [
+      "redis-server",
+      "--requirepass", "myStrongPersistenceRedisPass",
+      "--save", "900", "1",
+      "--appendonly", "yes",
+      "--user", "default", "on", ">myStrongPersistenceRedisPass", "~*", "&*"
+    ]
     volumes:
       - redis_persistence_data:/data
 
