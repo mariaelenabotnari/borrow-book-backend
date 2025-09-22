@@ -6,3 +6,5 @@ mvnw
 mvnw.cmd 
 logs/ 
 *.log 
+.env/
+.env
