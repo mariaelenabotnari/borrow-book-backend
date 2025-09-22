@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.config.properties.CsrfProperties;
 import org.borrowbook.borrowbookbackend.filter.CsrfCookieFilter;
 import org.borrowbook.borrowbookbackend.filter.JwtAuthentificationFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,6 +34,8 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfiguration {
+    @Value("${application.frontend.url}")
+    private String frontendUrl;
 
     private final UserDetailsService userDetailsService;
     private final JwtAuthentificationFilter jwtAuthFilter;
@@ -106,7 +109,7 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000"
+                frontendUrl
         ));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
