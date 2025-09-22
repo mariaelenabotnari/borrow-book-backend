@@ -23,17 +23,17 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         String remoteAddr = getClientIpAddress(request);
 
-        log.info("{} {} called from IP: {}", method, uri, remoteAddr);
+        if (!"GET".equals(method) || uri.equals("/api/util/ping"))
+            log.info("{} {} called from IP: {}", method, uri, remoteAddr);
 
         filterChain.doFilter(request, response);
     }
 
     private String getClientIpAddress(HttpServletRequest request) {
         String xForwardedForHeader = request.getHeader("X-Forwarded-For");
-        if (xForwardedForHeader == null) {
+        if (xForwardedForHeader == null)
             return request.getRemoteAddr();
-        } else {
+        else
             return xForwardedForHeader.split(",")[0];
-        }
     }
 }
