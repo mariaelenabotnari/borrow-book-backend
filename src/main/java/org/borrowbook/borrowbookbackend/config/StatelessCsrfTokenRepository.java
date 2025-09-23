@@ -31,28 +31,19 @@ public class StatelessCsrfTokenRepository implements CsrfTokenRepository {
         if (token == null)
             token = generateToken(request);
 
-        Cookie cookie = new Cookie(csrfProperties.getCookie().getName(), token.getToken());
-        cookie.setSecure(request.isSecure());
-        cookie.setPath(getRequestContext(request));
-        cookie.setMaxAge(csrfProperties.getCookie().getMaxAge());
-        cookie.setHttpOnly(csrfProperties.getCookie().isHttpOnly());
-
+        String cookieName = csrfProperties.getCookie().getName();
         String domain = csrfProperties.getCookie().getDomain();
-        if (domain != null && !domain.isEmpty())
-            cookie.setDomain(domain);
+        int maxAge = csrfProperties.getCookie().getMaxAge();
 
         StringBuilder cookieHeader = new StringBuilder();
-        cookieHeader.append(cookie.getName()).append("=").append(cookie.getValue())
-                .append("; Path=").append(cookie.getPath())
-                .append("; Max-Age=").append(cookie.getMaxAge());
-        if (cookie.getSecure())
-            cookieHeader.append("; Secure");
-        if (cookie.isHttpOnly())
-            cookieHeader.append("; HttpOnly");
-        if (cookie.getDomain() != null)
-            cookieHeader.append("; Domain=").append(cookie.getDomain());
-        cookieHeader.append("; SameSite=None");
-
+        cookieHeader.append(cookieName).append("=").append(token.getToken())
+                .append("; Path=/")
+                .append("; Max-Age=").append(maxAge)
+                .append("; Secure")
+                .append("; SameSite=None");
+        if (domain != null && !domain.isEmpty())
+            cookieHeader.append("; Domain=").append(domain);
+        
         response.addHeader("Set-Cookie", cookieHeader.toString());
     }
 
