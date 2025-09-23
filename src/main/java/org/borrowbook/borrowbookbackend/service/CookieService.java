@@ -5,12 +5,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.config.properties.CookieProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class CookieService {
+
+    @Value("${app.cookie.domain}")
+    private String cookieDomain;
 
     private final CookieProperties  cookieProperties;
 
@@ -66,7 +70,8 @@ public class CookieService {
         return ResponseCookie.from(name, token)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+                .sameSite("None")
+                .domain(cookieDomain)
                 .maxAge(maxAge)
                 .path("/")
                 .build();
@@ -76,7 +81,8 @@ public class CookieService {
         ResponseCookie clearCookie = ResponseCookie.from(cookieName, "")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Strict")
+                .sameSite("None")
+                .domain(cookieDomain)
                 .maxAge(0)
                 .path("/")
                 .build();
