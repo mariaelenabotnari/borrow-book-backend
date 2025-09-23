@@ -20,10 +20,9 @@ public class KeepAliveService {
     @Scheduled(fixedRate = 780000)
     public void keepAlive() {
         try {
-            restTemplate.getForObject(baseUrl + "/api/v1/auth/get", Void.class);
-            log.info("Keep-alive ping to /get successful");
+            restTemplate.getForObject(baseUrl + "/api/util/ping", Void.class);
         } catch (Exception e) {
-            log.warn("Keep-alive ping to /get failed: {}", e.getMessage());
+            log.warn("Keep-alive ping to /api/util/ping failed: {}", e.getMessage());
         }
     }
 }
