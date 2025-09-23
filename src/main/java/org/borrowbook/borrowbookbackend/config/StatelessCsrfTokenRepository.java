@@ -37,7 +37,23 @@ public class StatelessCsrfTokenRepository implements CsrfTokenRepository {
         cookie.setMaxAge(csrfProperties.getCookie().getMaxAge());
         cookie.setHttpOnly(csrfProperties.getCookie().isHttpOnly());
 
-        response.addCookie(cookie);
+        String domain = csrfProperties.getCookie().getDomain();
+        if (domain != null && !domain.isEmpty())
+            cookie.setDomain(domain);
+
+        StringBuilder cookieHeader = new StringBuilder();
+        cookieHeader.append(cookie.getName()).append("=").append(cookie.getValue())
+                .append("; Path=").append(cookie.getPath())
+                .append("; Max-Age=").append(cookie.getMaxAge());
+        if (cookie.getSecure())
+            cookieHeader.append("; Secure");
+        if (cookie.isHttpOnly())
+            cookieHeader.append("; HttpOnly");
+        if (cookie.getDomain() != null)
+            cookieHeader.append("; Domain=").append(cookie.getDomain());
+        cookieHeader.append("; SameSite=None");
+
+        response.addHeader("Set-Cookie", cookieHeader.toString());
     }
 
     @Override
