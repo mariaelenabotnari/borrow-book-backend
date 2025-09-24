@@ -37,18 +37,15 @@ public class OAuthConfig extends SimpleUrlAuthenticationSuccessHandler {
         String googleId = oauth2User.getAttribute("sub");
 
         User user = userRepository.findByEmailAndActivatedTrue(email).orElseGet(() -> {
-            // Create new user with Google authentication
             User newUser = new User(extractUsername(email), email, googleId, true);
             return userRepository.save(newUser);
         });
 
-        // If user exists but doesn't have Google ID, link the accounts
         if (user.getGoogleId() == null) {
             user.setGoogleId(googleId);
             userRepository.save(user);
         }
 
-        // Only check if user is activated (Google ID is now guaranteed to exist)
         if (!user.isActivated()) {
             throw new NotFoundException("Account is not activated.");
         }
