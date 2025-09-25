@@ -48,7 +48,7 @@ public class BookService {
     }
 
     public List<BorrowedBookDTO> fetchBorrowedBooks(String username) {
-        List<BorrowRequest> borrowRequests = borrowRequestRepository.findByBorrowerUsernameAndUserBookStatus(username, BookStatus.BORROWED);
+        List<BorrowRequest> borrowRequests = borrowRequestRepository.findByBorrowerUsernameAndStatus(username, BookRequestStatus.ACCEPTED);
         return borrowRequests.stream().map(BorrowedBookDTO::new).collect(Collectors.toList());
     }
 

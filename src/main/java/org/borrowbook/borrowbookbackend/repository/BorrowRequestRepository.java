@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BorrowRequestRepository extends JpaRepository<BorrowRequest, Long> {
-    List<BorrowRequest> findByBorrowerUsernameAndUserBookStatus(String borrowerUsername, BookStatus bookStatus);
     Optional<BorrowRequest> findByBorrowerUsernameAndUserBookIdAndStatus(String username, Integer userBookId, BookRequestStatus status);
     Optional<BorrowRequest> findByIdAndUserBookOwnerUsername(Integer id, String ownerUsername);
     List<BorrowRequest> findByUserBookIdAndStatusAndIdNot(Integer userBookId, BookRequestStatus status, Integer excludeRequestId);
