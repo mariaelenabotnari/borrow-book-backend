@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.borrowbook.borrowbookbackend.model.enums.BookStatus;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,6 +29,9 @@ public class UserBook {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bookId", nullable = false)
     private Book book;
+
+    @OneToMany(mappedBy = "userBook", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BorrowRequest> borrowRequests;
 
     public UserBook(BookStatus status, User user, Book book){
         this.status = status;
