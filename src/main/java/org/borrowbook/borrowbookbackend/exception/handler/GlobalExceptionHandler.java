@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -85,6 +86,21 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleUnauthorizedException(RuntimeException ex) {
         log.error(ex.getMessage(), ex.getCause());
         HttpStatus status = HttpStatus.UNAUTHORIZED;
+
+        ExceptionResult globalException = new ExceptionResult(
+                ex.getMessage(),
+                status,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(globalException, status);
+    }
+
+    @ExceptionHandler(exception = {
+            AuthorizationDeniedException.class
+    })
+    public ResponseEntity<Object> handleAuthorizationDeniedException(RuntimeException ex) {
+        log.error(ex.getMessage(), ex.getCause());
+        HttpStatus status = HttpStatus.FORBIDDEN;
 
         ExceptionResult globalException = new ExceptionResult(
                 ex.getMessage(),

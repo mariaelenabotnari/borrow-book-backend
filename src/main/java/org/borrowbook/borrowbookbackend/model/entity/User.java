@@ -36,7 +36,7 @@ public class User implements UserDetails {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.role = Role.USER;
+        this.role = Role.ROLE_USER;
         this.activated = false;
         this.googleId = null;
     }
@@ -46,7 +46,7 @@ public class User implements UserDetails {
         this.email = email;
         this.googleId = googleId;
         this.activated = isActivated;
-        this.role = Role.USER;
+        this.role = Role.ROLE_USER;
     }
 
     @Override
