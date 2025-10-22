@@ -6,9 +6,7 @@ import org.borrowbook.borrowbookbackend.exception.BookIsAlreadyBorrowedException
 import org.borrowbook.borrowbookbackend.exception.CantBorrowYourOwnBookException;
 import org.borrowbook.borrowbookbackend.exception.MissingFieldException;
 import org.borrowbook.borrowbookbackend.exception.PendingBorrowRequestExistsException;
-import org.borrowbook.borrowbookbackend.model.dto.BorrowRequestDTO;
-import org.borrowbook.borrowbookbackend.model.dto.BorrowRequestResponseDTO;
-import org.borrowbook.borrowbookbackend.model.dto.PaginatedResultDTO;
+import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.model.entity.BorrowRequest;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.model.entity.UserBook;
@@ -118,4 +116,40 @@ public class BorrowService {
                 .map(BorrowRequestResponseDTO::new)
                 .collect(Collectors.toList());
     }
+
+    public PaginatedResultDTO<AdminBorrowRequestDTO> getAllBorrowRequestsPaginated(PaginatedRequestDTO request) {
+        Pageable pageable = PageRequest.of(
+                request.getPageIndex() - 1,
+                request.getPageSize(),
+                Sort.by("createdAt").descending()
+        );
+
+        Page<BorrowRequest> borrowRequests = borrowRequestRepository.findAll(pageable);
+
+        List<AdminBorrowRequestDTO> items = borrowRequests.getContent().stream().map(br -> {
+            String bookTitle = br.getUserBook().getBook().getTitle();
+            String borrower = br.getBorrower().getUsername();
+            String lender = br.getUserBook().getOwner().getUsername();
+            String status = br.getStatus().name();
+            String requestDate = br.getCreatedAt().toString();
+            String responseDate = (br.getBorrowedAt() != null) ? br.getBorrowedAt().toString() : null;
+            return new AdminBorrowRequestDTO(
+                    br.getId(),
+                    bookTitle,
+                    borrower,
+                    lender,
+                    status,
+                    requestDate,
+                    responseDate
+            );
+        }).collect(Collectors.toList());
+
+        return new PaginatedResultDTO<>(
+                request.getPageIndex(),
+                request.getPageSize(),
+                borrowRequests.getTotalElements(),
+                items
+        );
+    }
+
 }
