@@ -36,7 +36,7 @@ public class User implements UserDetails {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.role = Role.ROLE_USER;
+        this.role = Role.USER;
         this.activated = false;
         this.googleId = null;
     }
@@ -46,12 +46,12 @@ public class User implements UserDetails {
         this.email = email;
         this.googleId = googleId;
         this.activated = isActivated;
-        this.role = Role.ROLE_USER;
+        this.role = Role.USER;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override

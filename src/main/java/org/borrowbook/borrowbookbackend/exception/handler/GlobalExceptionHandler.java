@@ -10,12 +10,12 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
-import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -45,14 +45,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(globalException, badRequest);
     }
 
-    @ExceptionHandler(exception={
+    @ExceptionHandler(exception = {
             EmailInUseException.class,
             UsernameInUseException.class,
             InvalidCodeException.class,
             EmailServiceException.class,
             RateLimitException.class,
-            MaxOtpAttemptsExceededException.class,
-            EntityNotFoundException.class
+            MaxOtpAttemptsExceededException.class
     })
     public ResponseEntity<Object> handleBadRequestException(RuntimeException ex) {
         log.error(ex.getMessage(), ex.getCause());
@@ -66,7 +65,25 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(globalException, status);
     }
 
-    @ExceptionHandler(NotFoundException.class)
+    @ExceptionHandler(exception = {
+            MethodArgumentTypeMismatchException.class
+    })
+    public ResponseEntity<Object> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        log.error(ex.getMessage(), ex.getCause());
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        ExceptionResult globalException = new ExceptionResult(
+                "Invalid status value: " + ex.getValue() + ". Valid values are: PENDING, ACCEPTED, REJECTED.",
+                status,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(globalException, status);
+    }
+
+    @ExceptionHandler(exception = {
+            NotFoundException.class,
+            EntityNotFoundException.class
+    })
     public ResponseEntity<Object> handleNotFoundException(NotFoundException ex) {
         log.error(ex.getMessage(), ex.getCause());
         HttpStatus status = HttpStatus.NOT_FOUND;
@@ -96,7 +113,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(exception = {
-            AuthorizationDeniedException.class
+            AuthorizationDeniedException.class,
+            SecurityException.class
     })
     public ResponseEntity<Object> handleAuthorizationDeniedException(RuntimeException ex) {
         log.error(ex.getMessage(), ex.getCause());
@@ -127,6 +145,7 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(globalException, status);
     }
+
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Void> handleNoResourceFound(NoResourceFoundException ex) throws NoResourceFoundException {
         String path = ex.getResourcePath();
