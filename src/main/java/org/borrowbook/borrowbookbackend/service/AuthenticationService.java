@@ -9,6 +9,8 @@ import org.borrowbook.borrowbookbackend.exception.*;
 import org.borrowbook.borrowbookbackend.model.dto.*;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
+import org.borrowbook.borrowbookbackend.service.mail.EmailService;
+import org.borrowbook.borrowbookbackend.service.mail.SMTPEmailService;
 import org.borrowbook.borrowbookbackend.util.Generator;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

@@ -1,4 +1,4 @@
-package org.borrowbook.borrowbookbackend.service;
+package org.borrowbook.borrowbookbackend.service.mail;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
@@ -16,13 +16,14 @@ import java.io.UnsupportedEncodingException;
 
 @RequiredArgsConstructor
 @Service
-public class EmailService {
+public class SMTPEmailService implements EmailService {
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
     @Value("${spring.mail.username}")
     private String senderEmail;
 
+    @Override
     public void sendVerificationCode(String recipientEmail, String verificationCode) {
         try {
             Context context = new Context();
