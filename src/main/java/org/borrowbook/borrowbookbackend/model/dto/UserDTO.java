@@ -7,9 +7,11 @@ import org.borrowbook.borrowbookbackend.model.entity.User;
 public class UserDTO {
     private String username;
     private String email;
+    private String role;
 
     public UserDTO(User user) {
         this.username = user.getUsername();
         this.email = user.getEmail();
+        this.role = user.getRole().name();
     }
 }
