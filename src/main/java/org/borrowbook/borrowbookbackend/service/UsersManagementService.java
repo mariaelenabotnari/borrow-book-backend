@@ -1,5 +1,6 @@
 package org.borrowbook.borrowbookbackend.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.Role;
 import org.borrowbook.borrowbookbackend.model.dto.PaginatedRequestDTO;
@@ -47,4 +48,29 @@ public class UsersManagementService {
                 users
         );
     }
+
+    public UserDTO adminFindUser(User admin, String username) {
+        if (admin.getRole() != Role.ADMIN)
+            throw new SecurityException("Only admins can perform this action.");
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found."));
+
+        return new UserDTO(user);
+    }
+
+    public void adminDeleteUser(User admin, String username) {
+        if (admin.getRole() != Role.ADMIN)
+            throw new SecurityException("Only admins can perform this action.");
+
+        try {
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found."));
+            userRepository.delete(user);
+
+        } catch (EntityNotFoundException ex) {
+            throw new EntityNotFoundException(ex.getMessage());
+        }
+    }
+
 }

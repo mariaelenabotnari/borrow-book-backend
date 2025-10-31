@@ -80,11 +80,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(globalException, status);
     }
 
-    @ExceptionHandler(exception = {
+    @ExceptionHandler({
             NotFoundException.class,
             EntityNotFoundException.class
     })
-    public ResponseEntity<Object> handleNotFoundException(NotFoundException ex) {
+    public ResponseEntity<Object> handleNotFoundException(Exception ex) {
         log.error(ex.getMessage(), ex.getCause());
         HttpStatus status = HttpStatus.NOT_FOUND;
 
