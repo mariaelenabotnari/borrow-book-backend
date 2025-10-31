@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -59,18 +60,17 @@ public class UsersManagementService {
         return new UserDTO(user);
     }
 
+    @Transactional
     public void adminDeleteUser(User admin, String username) {
         if (admin.getRole() != Role.ADMIN)
             throw new SecurityException("Only admins can perform this action.");
 
-        try {
-            User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found."));
-            userRepository.delete(user);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found."));
 
-        } catch (EntityNotFoundException ex) {
-            throw new EntityNotFoundException(ex.getMessage());
-        }
+        if (user.getRole() == Role.ADMIN)
+            throw new SecurityException("Cannot delete another admin user.");
+
+        userRepository.delete(user);
     }
-
 }

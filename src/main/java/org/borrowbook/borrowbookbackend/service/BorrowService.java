@@ -35,6 +35,7 @@ public class BorrowService {
     private final BorrowRequestRepository borrowRequestRepository;
     private final UserBookRepository userBookRepository;
 
+    @Transactional
     public void saveBorrowRequest(User user, BorrowRequestDTO borrowRequestDTO, Integer userBookId) {
         String username = user.getUsername();
         Optional<BorrowRequest> existingRequest = borrowRequestRepository
@@ -46,7 +47,7 @@ public class BorrowService {
                     "You already have a pending borrow request for this book.");
 
         UserBook userBook = userBookRepository.findById(Long.valueOf(userBookId))
-                .orElseThrow(() -> new EntityNotFoundException("UserBook not found with id: " + userBookId));
+                .orElseThrow(() -> new EntityNotFoundException("UserBook not found with id: " + userBookId + "."));
 
         if (userBook.getStatus() == BookStatus.BORROWED)
             throw new BookIsAlreadyBorrowedException("This book is already borrowed by another user.");
@@ -80,7 +81,7 @@ public class BorrowService {
 
     private BorrowRequest getBorrowRequestForOwner(User owner, Integer borrowRequestId) {
         return borrowRequestRepository.findByIdAndUserBookOwnerUsername(borrowRequestId, owner.getUsername())
-                .orElseThrow(() -> new EntityNotFoundException("Borrow request not found or you're not the owner"));
+                .orElseThrow(() -> new EntityNotFoundException("Borrow request not found or you're not the owner."));
     }
 
     public PaginatedResultDTO<BorrowRequestResponseDTO> getIncomingRequests(User owner, Integer size, Integer page) {
@@ -142,21 +143,23 @@ public class BorrowService {
         );
     }
 
+    @Transactional
     public void adminAcceptBorrowRequest(User admin, Integer borrowRequestId) {
         if (admin.getRole() != Role.ADMIN)
-            throw new SecurityException("Only admins can perform this action.");
+            throw new SecurityException("Only admins can perform this action");
 
         BorrowRequest borrowRequest = borrowRequestRepository.findById(Long.valueOf(borrowRequestId))
                 .orElseThrow(() -> new NotFoundException("Borrow request not found"));
         processAccept(borrowRequest);
     }
 
+    @Transactional
     public void adminRejectBorrowRequest(User admin, Integer borrowRequestId) {
         if (admin.getRole() != Role.ADMIN)
             throw new SecurityException("Only admins can perform this action.");
 
         BorrowRequest borrowRequest = borrowRequestRepository.findById(Long.valueOf(borrowRequestId))
-                .orElseThrow(() -> new NotFoundException("Borrow request not found"));
+                .orElseThrow(() -> new NotFoundException("Borrow request not found."));
         processReject(borrowRequest);
     }
 

@@ -29,24 +29,24 @@ public class RefreshTokenService {
         String refreshToken = cookieService.extractRefreshTokenFromRequest(request);
         
         if (refreshToken == null || refreshToken.isEmpty()) {
-            throw new RefreshTokenException("Refresh token not found");
+            throw new RefreshTokenException("Refresh token not found.");
         }
         
         try {
             String username = jwtService.extractUsername(refreshToken);
             if (username == null) {
-                throw new RefreshTokenException("Invalid refresh token");
+                throw new RefreshTokenException("Invalid refresh token.");
             }
 
             User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RefreshTokenException("User not found"));
+                    .orElseThrow(() -> new RefreshTokenException("User not found."));
 
             if (!jwtService.isValidRefreshToken(refreshToken, user)) {
-                throw new RefreshTokenException("Invalid or expired refresh token");
+                throw new RefreshTokenException("Invalid or expired refresh token.");
             }
 
             if (!refreshTokenPersistenceService.isPersistedRefreshToken(user.getEmail(), refreshToken)) {
-                throw new RefreshTokenException("Invalid or expired refresh token");
+                throw new RefreshTokenException("Invalid or expired refresh token.");
             }
 
             String newAccessToken = jwtService.generateAccessToken(user);

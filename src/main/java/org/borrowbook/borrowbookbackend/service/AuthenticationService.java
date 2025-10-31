@@ -103,16 +103,17 @@ public class AuthenticationService {
         rateLimiterService.deleteRateLimit(session.getUsername(), "login");
     }
 
+    @Transactional
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         String accessToken = cookieService.extractAccessTokenFromRequest(request);
 
         if (accessToken == null || accessToken.isEmpty()) {
-            throw new RefreshTokenException("No active session found");
+            throw new RefreshTokenException("No active session found.");
         }
 
         String username = jwtService.extractUsername(accessToken);
         User user = repository.findByUsername(username)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found."));
 
         refreshTokenPersistenceService.removeRefreshToken(user.getEmail());
 

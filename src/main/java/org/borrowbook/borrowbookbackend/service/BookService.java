@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -73,6 +74,7 @@ public class BookService {
         return booksList;
     }
 
+    @Transactional
     public void deleteBook(String username, int userBookId) {
         UserBook userBook = userBookRepository.findByIdAndOwner_Username(userBookId, username)
                 .orElseThrow(() -> new EntityNotFoundException("Book not found or not owned by user"));
@@ -97,6 +99,7 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public AddBookResponseDTO addBookToUser(String googleBookId, BookStatus status, User user) {
         Optional<Book> existingBook = bookRepository.findByGoogleBookId(googleBookId);
         Book book;
@@ -159,7 +162,7 @@ public class BookService {
             }
             return googleBookDTO;
         } catch (HttpServerErrorException e) {
-            throw new NotFoundException("Google Books API is temporarily unavailable. Please try again later.");
+            throw new NotFoundException("Google Books API is temporarily unavailable. Please try again later");
         }
     }
 }

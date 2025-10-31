@@ -6,6 +6,7 @@ import org.borrowbook.borrowbookbackend.model.dto.PaginatedResultDTO;
 import org.borrowbook.borrowbookbackend.model.dto.UserDTO;
 import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.service.UsersManagementService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,7 @@ public class AdminManageUsersController {
     }
 
     @DeleteMapping("/{username}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(
             @AuthenticationPrincipal User admin,
             @PathVariable String username
