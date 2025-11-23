@@ -40,7 +40,7 @@ public class StatelessCsrfTokenRepository implements CsrfTokenRepository {
                 .append("; Path=/")
                 .append("; Max-Age=").append(maxAge)
                 .append("; Secure")
-                .append("; SameSite=None");
+                .append("; SameSite=Strict");
         if (domain != null && !domain.isEmpty())
             cookieHeader.append("; Domain=").append(domain);
         
