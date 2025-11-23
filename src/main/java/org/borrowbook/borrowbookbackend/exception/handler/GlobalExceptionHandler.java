@@ -15,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -145,6 +146,21 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(globalException, status);
     }
+
+    @ExceptionHandler(HttpServerErrorException.ServiceUnavailable.class)
+    public ResponseEntity<Object> handleServiceUnavailable(
+            HttpServerErrorException.ServiceUnavailable ex) {
+        log.error("External service unavailable: {}", ex.getMessage());
+        HttpStatus status = HttpStatus.SERVICE_UNAVAILABLE;
+
+        ExceptionResult globalException = new ExceptionResult(
+                "External service is temporarily unavailable. Please try again later.",
+                status,
+                ZonedDateTime.now(ZoneId.of("UTC"))
+        );
+        return new ResponseEntity<>(globalException, status);
+    }
+
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Void> handleNoResourceFound(NoResourceFoundException ex) throws NoResourceFoundException {
