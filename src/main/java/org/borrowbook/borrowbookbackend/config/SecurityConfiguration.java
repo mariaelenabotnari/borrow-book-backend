@@ -85,7 +85,27 @@ public class SecurityConfiguration {
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class);
+            .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
+            .headers(headers -> headers
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .maxAgeInSeconds(31536000)  // 1 year
+                    .includeSubDomains(true)
+                    .preload(true)
+                )
+                .frameOptions(frame -> frame.deny())
+                .contentSecurityPolicy(csp -> csp
+                    .policyDirectives(
+                        "default-src 'self'; " +
+                        "script-src 'self'; " +
+                        "style-src 'self'; " +
+                        "img-src 'self' data:; " +
+                        "font-src 'self'; " +
+                        "form-action 'self'; " +  // Add this directive
+                        "frame-ancestors 'none'; " +
+                        "base-uri 'self'"
+                    )
+                )
+            );
 
         return http.build();
     }
