@@ -21,7 +21,7 @@ services:
     command: [
       "redis-server",
       "--requirepass", "myStrongCacheRedisPass",
-      "--user", "default", "on", ">myStrongCacheRedisPass", "~*", "+@all", "-@dangerous"
+      "--user", "default", "on", ">myStrongCacheRedisPass", "~*", "+@all"
     ]
 
 
@@ -36,7 +36,7 @@ services:
       "--requirepass", "myStrongPersistenceRedisPass",
       "--save", "900", "1",
       "--appendonly", "yes",
-      "--user", "default", "on", ">myStrongPersistenceRedisPass", "~*", "+@all", "-@dangerous"
+      "--user", "default", "on", ">myStrongPersistenceRedisPass", "~*", "+@all"
     ]
     volumes:
       - redis_persistence_data:/data
