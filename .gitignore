@@ -8,3 +8,5 @@ logs/
 *.log 
 .env/
 .env
+.DS_Store
+.vscode/
