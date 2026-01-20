@@ -35,7 +35,7 @@ RUN chown springboot:springboot app.jar
 USER springboot
 
 # Expose the port
-EXPOSE $PORT
+EXPOSE 10000
 
 # Run the application
-CMD java -Dserver.port=$PORT -jar app.jar
+CMD java -Dserver.port=${PORT:-10000} -Dserver.address=0.0.0.0 -jar app.jar
