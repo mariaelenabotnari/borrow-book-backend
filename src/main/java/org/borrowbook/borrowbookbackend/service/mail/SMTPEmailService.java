@@ -6,6 +6,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.borrowbook.borrowbookbackend.exception.EmailServiceException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.io.UnsupportedEncodingException;
 
 @RequiredArgsConstructor
 @Service
+@Profile("dev")
 public class SMTPEmailService implements EmailService {
 
     private final JavaMailSender mailSender;

@@ -3,6 +3,7 @@ package org.borrowbook.borrowbookbackend.service.mail;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,6 +19,7 @@ import java.util.Base64;
 
 @Primary
 @Service
+@Profile("prod")
 @RequiredArgsConstructor
 public class APIEmailService implements EmailService{
 
