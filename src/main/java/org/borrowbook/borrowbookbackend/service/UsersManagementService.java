@@ -7,6 +7,9 @@ import org.borrowbook.borrowbookbackend.model.dto.PaginatedRequestDTO;
 import org.borrowbook.borrowbookbackend.model.dto.PaginatedResultDTO;
 import org.borrowbook.borrowbookbackend.model.dto.UserDTO;
 import org.borrowbook.borrowbookbackend.model.entity.User;
+import org.borrowbook.borrowbookbackend.model.entity.UserBook;
+import org.borrowbook.borrowbookbackend.repository.BorrowRequestRepository;
+import org.borrowbook.borrowbookbackend.repository.UserBookRepository;
 import org.borrowbook.borrowbookbackend.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +24,8 @@ import java.util.List;
 @Service
 public class UsersManagementService {
     private final UserRepository userRepository;
+    private final BorrowRequestRepository borrowRequestRepository;
+    private final UserBookRepository userBookRepository;
 
     public PaginatedResultDTO<UserDTO> adminGetUsers(
             User admin,
@@ -71,6 +76,14 @@ public class UsersManagementService {
         if (user.getRole() == Role.ADMIN)
             throw new SecurityException("Cannot delete another admin user.");
 
+        // Delete all borrow requests where this user is the borrower
+        borrowRequestRepository.deleteAllByBorrower(user);
+
+        // Delete all user books (this will cascade delete related borrow requests)
+        List<UserBook> userBooks = userBookRepository.findByOwner(user);
+        userBookRepository.deleteAll(userBooks);
+
+        // Now delete the user
         userRepository.delete(user);
     }
 }

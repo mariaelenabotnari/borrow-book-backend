@@ -1,5 +1,6 @@
 package org.borrowbook.borrowbookbackend.repository;
 
+import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.model.entity.UserBook;
 import org.borrowbook.borrowbookbackend.model.enums.BookStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,4 +16,6 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
 
     Page<UserBook> findByBookTitleContainingIgnoreCaseAndStatusAndOwnerUsernameNot(
             String title, BookStatus status, String username, Pageable pageable);
+    
+    List<UserBook> findByOwner(User owner);
 }

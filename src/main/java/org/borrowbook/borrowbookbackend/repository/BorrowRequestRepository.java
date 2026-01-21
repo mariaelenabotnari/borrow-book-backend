@@ -1,8 +1,8 @@
 package org.borrowbook.borrowbookbackend.repository;
 
 import org.borrowbook.borrowbookbackend.model.entity.BorrowRequest;
+import org.borrowbook.borrowbookbackend.model.entity.User;
 import org.borrowbook.borrowbookbackend.model.enums.BookRequestStatus;
-import org.borrowbook.borrowbookbackend.model.enums.BookStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,5 +17,6 @@ public interface BorrowRequestRepository extends JpaRepository<BorrowRequest, Lo
     Page<BorrowRequest> findByUserBookOwnerUsernameAndStatus(String ownerUsername, BookRequestStatus status, Pageable pageable);
     List<BorrowRequest> findByBorrowerUsernameAndStatus(String borrowerUsername, BookRequestStatus status);
     Page<BorrowRequest> findByStatus(BookRequestStatus status, Pageable pageable);
+    void deleteAllByBorrower(User borrower);
 }
 
