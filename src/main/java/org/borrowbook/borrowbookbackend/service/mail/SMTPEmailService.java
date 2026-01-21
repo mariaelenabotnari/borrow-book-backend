@@ -16,8 +16,6 @@ import org.thymeleaf.context.Context;
 import java.io.UnsupportedEncodingException;
 
 @RequiredArgsConstructor
-@Service
-@Profile("dev")
 public class SMTPEmailService implements EmailService {
 
     private final JavaMailSender mailSender;

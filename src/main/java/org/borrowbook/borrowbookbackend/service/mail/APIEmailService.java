@@ -18,8 +18,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 @Primary
-@Service
-@Profile("prod")
 @RequiredArgsConstructor
 public class APIEmailService implements EmailService{
 
