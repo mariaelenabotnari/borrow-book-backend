@@ -1,0 +1,63 @@
+services:
+  backend:
+    build: .
+    container_name: borrow_book_backend
+    restart: unless-stopped
+    ports:
+      - "8080:10000"
+    environment:
+      - POSTGRES_HOST=postgres
+      - REDIS_CACHE_HOST=redis-cache
+      - REDIS_PERSISTENCE_HOST=redis-persistence
+      - REDIS_PERSISTENCE_PORT=6379
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis-cache
+      - redis-persistence
+
+  postgres:
+    image: postgres:15
+    container_name: borrow_book_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: borrow_book
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: maria2004
+    ports:
+      - "5432:5432"
+    volumes:
+      - book_data:/var/lib/postgresql/data
+
+  redis-cache:
+    image: redis:7.2.4
+    container_name: borrow_book_redis_cache
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: [
+      "redis-server",
+      "--requirepass", "myStrongCacheRedisPass",
+      "--user", "default", "on", ">myStrongCacheRedisPass", "~*", "+@all"
+    ]
+
+  redis-persistence:
+    image: redis:7.2.4
+    container_name: borrow_book_redis_persistence
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    command: [
+      "redis-server",
+      "--requirepass", "myStrongPersistenceRedisPass",
+      "--save", "900", "1",
+      "--appendonly", "yes",
+      "--user", "default", "on", ">myStrongPersistenceRedisPass", "~*", "+@all"
+    ]
+    volumes:
+      - redis_persistence_data:/data
+
+volumes:
+  book_data:
+  redis_persistence_data:
