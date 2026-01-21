@@ -2,7 +2,7 @@
 
 A Spring Boot backend application for a physical book borrowing system where users can share and borrow books from each other.
 
-## What does it let us do... so far?
+## What does it do?
 
 BorrowBook allows users to:
 - Register/login with email verification or Google OAuth
@@ -30,42 +30,68 @@ BorrowBook allows users to:
 
 ## How to Run
 
-### Prerequisites
-- Docker & Docker Compose
-- Java 17+ (if running locally)
+### Option 1: Full Docker Setup (No Java Required)
 
-### Using Docker
 ```bash
-# Start PostgreSQL and Redis services
+# 1. Copy the example environment file
+cp .env.example .env
+
+# 2. Edit .env with your own secrets (mail, OAuth, API keys)
+
+# 3. Build and run everything
+docker-compose -f docker-compose.full.yml up --build
+```
+
+The app will be available at `http://localhost:8080`.
+
+### Option 2: Local Development (Java Required)
+
+**Prerequisites:**
+- Docker & Docker Compose
+- Java 17+
+
+```bash
+# 1. Start databases only
 docker-compose up -d
 
-# Set required environment variables
-export SPRING_MAIL_USERNAME=your-email@domain.com
-export SPRING_MAIL_PASSWORD=your-email-password
-export GOOGLE_BOOK_API_KEY=your-google-books-api-key
-export CLIENT_ID=your-google-oauth-client-id
-export CLIENT_SECRET=your-google-oauth-client-secret
+# 2. Copy and configure environment
+cp .env.example .env
+# Edit .env with your secrets
 
-# JWT & Security
-export JWT_SECRET=your-jwt-secret-key
-export JWT_EXPIRATION=86400000
-export REFRESH_TOKEN_EXPIRATION=604800000
-
-# Database
-export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/borrowbook
-export SPRING_DATASOURCE_USERNAME=your-db-username
-export SPRING_DATASOURCE_PASSWORD=your-db-password
-
-# Redis
-export SPRING_REDIS_HOST=localhost
-export SPRING_REDIS_PORT=6379
-export SPRING_REDIS_PASSWORD=your-redis-password
-
-# Email configuration
-export SPRING_MAIL_HOST=smtp.purelymail.com
-export SPRING_MAIL_PORT=587
-export FRONTEND_URL=http://localhost:3000
-
-# Run the application
+# 3. Run the Spring Boot app
 ./mvnw spring-boot:run
 ```
+
+### Required Environment Variables
+
+See `.env.example` for all required variables:
+- `SPRING_MAIL_USERNAME` / `SPRING_MAIL_PASSWORD` - Email service credentials
+- `CLIENT_ID` / `CLIENT_SECRET` - Google OAuth credentials
+- `GOOGLE_BOOK_API_KEY` - Google Books API key
+- `MAILGUN_API_KEY` / `MAILGUN_DOMAIN` - Mailgun credentials (for production)
+- `MAIL_PROVIDER` - Email provider (`smtp` for local, `mailgun` for production)
+
+## CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration and deployment.
+
+### Pipeline Stages
+
+1. **Build** - Compiles the project with Maven
+2. **Test** - Runs all unit tests
+3. **Deploy** - Triggers deployment on Render (only on push/merge to `master`)
+
+### How It Works
+
+- On **pull request** to `master`: Build and test only (validates the code)
+- On **push/merge** to `master`: Build → Test → Deploy to production
+
+### Secrets Management
+
+| Secret | Location | Purpose |
+|--------|----------|---------|
+| `RENDER_DEPLOY_HOOK` | GitHub Secrets | Webhook URL to trigger Render deployment |
+| All other env vars | Render Dashboard | App configuration (DB, Redis, OAuth, API keys, etc.) |
+
+This separation keeps deployment credentials in GitHub while application secrets stay in Render's environment.
+
