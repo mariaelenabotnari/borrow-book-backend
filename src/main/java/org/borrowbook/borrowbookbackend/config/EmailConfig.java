@@ -2,6 +2,7 @@ package org.borrowbook.borrowbookbackend.config;
 
 import org.borrowbook.borrowbookbackend.service.mail.APIEmailService;
 import org.borrowbook.borrowbookbackend.service.mail.EmailService;
+import org.borrowbook.borrowbookbackend.service.mail.ResendEmailService;
 import org.borrowbook.borrowbookbackend.service.mail.SMTPEmailService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -22,5 +23,11 @@ public class EmailConfig {
     @ConditionalOnProperty(name = "app.mail.provider", havingValue = "mailgun")
     public EmailService mailgunEmailService(TemplateEngine templateEngine) {
         return new APIEmailService(templateEngine);
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "app.mail.provider", havingValue = "resend")
+    public EmailService resendEmailService(TemplateEngine templateEngine) {
+        return new ResendEmailService(templateEngine);
     }
 }
