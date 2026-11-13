@@ -69,7 +69,8 @@ See `.env.example` for all required variables:
 - `CLIENT_ID` / `CLIENT_SECRET` - Google OAuth credentials
 - `GOOGLE_BOOK_API_KEY` - Google Books API key
 - `MAILGUN_API_KEY` / `MAILGUN_DOMAIN` - Mailgun credentials (for production)
-- `MAIL_PROVIDER` - Email provider (`smtp` for local, `mailgun` for production)
+- `RESEND_API_KEY` / `RESEND_FROM` - Resend credentials and sender address (e.g. `BorrowBook <noreply@your.verified.domain>`)
+- `MAIL_PROVIDER` - Email provider (`smtp` for local, `mailgun` or `resend` for production)
 
 ## CI/CD Pipeline
 
